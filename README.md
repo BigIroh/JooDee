@@ -8,7 +8,7 @@ Client and Session objects.
 
 ##Dependencies##
 ```
-npm install syntax-error<br>
+npm install syntax-error
 npm install mime
 ```
 
