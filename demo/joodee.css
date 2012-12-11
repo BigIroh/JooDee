@@ -1,6 +1,6 @@
 body {
-	background-image:url('JooDee.png'), url('Iroh.png');
+	background-image:url('JooDee.png');
 	background-repeat:no-repeat;
-	background-position:left bottom, right bottom;
-	background-attachment: fixed, fixed;
+	background-position:left bottom;
+	background-attachment: fixed;
 }
