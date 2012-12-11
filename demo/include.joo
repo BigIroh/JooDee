@@ -1,0 +1,188 @@
+<!DOCTYPE>
+<html>
+	<:
+	//generate background and font colors
+	var red = Math.floor(Math.random()*100) + 100;
+	var green = Math.floor(Math.random()*100) + 125;
+	var blue = Math.floor(Math.random()*100) + 125;
+
+	var sayings = [
+		"<b>JooDee</b> is bringing <span class='code'>Javascript</span> back to the browser.",
+		"<b>JooDee</b> is a single language for the client and server.",
+		"<b>JooDee</b> sticks <span class='code'>Node.js</span> into your web pages.",
+		"<b>JooDee</b> is serving up asynchronous <span class='code'>Javascript</span>.",
+		"Everyone in Ba Sing Se loves <b>JooDee</b>.",
+		"Learning curve? <b>JooDee</b> is the same <span class='code'>Javascript</span> you know and love.",
+	];
+
+	var motv = sayings[Math.floor(Math.random()*sayings.length)]; //message of the visit
+	:>
+	<head>
+		<title>JooDee</title>
+		<link rel="stylesheet" type="text/css" href="iroh.css">
+		<link rel="stylesheet" type="text/css" href="joodee.css">
+		<link rel="stylesheet" type="text/css" href="codemirror/lib/codemirror.css">
+    	<link rel="stylesheet" type="text/css" href="codemirror/theme/monokai.css">
+		<script type="text/javascript" src="codemirror/lib/codemirror.js"></script>
+    	<script type="text/javascript" src="codemirror/mode/javascript/javascript.js"></script>
+    	<script type="text/javascript" src="codemirror/mode/xml/xml.js"></script>
+	    <script type="text/javascript" src="codemirror/mode/javascript/javascript.js"></script>
+	    <script type="text/javascript" src="codemirror/mode/css/css.js"></script>
+	    <script type="text/javascript" src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
+	    <script type="text/javascript" src="codemirror/mode/htmlembedded/htmlembedded.js"></script>
+	</head>
+	<body>
+		<div class="motv"><::motv:></div>
+		<div class="content">
+			<div class="item">
+				<div class="header">
+					What is JooDee?
+				</div>
+				JooDee is web server built on Node.js which lets you create web pages powered by
+				server side Javascript.  In the style of PHP, ASP, or Coldfusion, you create a page 
+				consisting of HTML and some serverside code.  JooDee interprets that code and spits
+				out a pure HTML page to the visitor.  What makes JooDee special is that it is <i> entirely
+				Javascript</i>.
+				<div class="example_code" id="code1">
+
+				</div>
+
+				<script type="application/javascript">
+					var editor = CodeMirror(document.getElementById("code1"), {
+						lineNumbers: true,
+						theme: "monokai",
+						readOnly: true,
+       					mode: "application/x-ejs",
+       					tabSize: 3,
+       					value: "<html>\
+	\<\: \
+		Session.username = 'jscott';	//this is serverside JS\
+	\:\>\
+	<body>\
+		<!-- go on about your normal html business -->\
+	</body>\
+</html>"
+					});
+				</script>
+
+			</div><!--End of item-->
+			<div class="item">
+				<:
+					debugging.is.cool = true;
+				:>
+				<div class="header">
+					Seamless Client/Server Scripting
+				</div>
+				Using your server-side varaibles in your client-side scripts has never been easier.  In JooDee,
+				the object <span class='code'>Client</span> can hold any server variables you want.  When the page is rendered, the
+				<span class='code'>Client</span> is made available to your client-side scripts via JSON object.  
+				<div class="example_code" id="code2">
+
+				</div>
+
+				<script type="application/javascript">
+					var editor = CodeMirror(document.getElementById("code2"), {
+						lineNumbers: true,
+						theme: "monokai",
+						readOnly: true,
+       					mode: "application/x-ejs",
+       					tabSize: 3,
+       					value: 	"\<\: \
+   //set some variables server-side...\
+	Client.favoriteNumber = 3;\
+	Client.favoriteColor = 'blue';\
+\:\>\
+<html>\
+	<body>\
+		<script>\
+			function demo() {\
+				//...and access them client-side.  This will alert 'blue' three times.\
+				for(var i=0; i<Client.favoriteNumber; i++) {\
+					alert(Client.color + ' ' + i)\
+				}\
+			}\
+		<\\/script>\
+	</body>\
+</html>"
+					});
+				</script>
+			</div><!--End of item-->
+			<div class="item">
+				<div class="header">
+					Asynchronous I/O
+				</div>
+				If you know Node.js, you understand the benefits of keeping your code asynchronous.  With JooDee, you maintain
+				that option.  Write all of the asynchronous calls you want, chain a million callbacks together, and signal the
+				server when you're done using <span class="code">Response.end()</span>. If you don't have any callbacks to wait
+				on, JooDee will serve the page automatically after it has finished parsing it.
+				<div class="example_code" id="code3"></div>
+
+				<script type="application/javascript">
+					var editor = CodeMirror(document.getElementById("code3"), {
+						lineNumbers: true,
+						theme: "monokai",
+						readOnly: true,
+       					mode: "application/x-ejs",
+       					tabSize: 3,
+       					value: 	"\<\:\
+    var fs = require('fs');\
+    var http = require('http');\
+    \
+    var files = null;\
+    var get = null;\
+    var build = function(part) {\
+    	  //we make sure all our async functions have completed before writing the response\
+        if(files && get) {\
+            \:\>\
+                <html>\
+                    <body>\
+                        \<\:\
+                            for(f in files) {\
+                        \:\>\
+                                \<\:: files[f] \:\>,&nbsp;\
+                        \<\:\
+                            }\
+                        \:\>\
+                        <pre>\
+                            \<\:: get \:\>\
+                        </pre>\
+                    </body>\
+                </html>\
+            \<\:\
+            Response.end();\
+        }\
+    }\
+\
+    fs.readdir('.', function(err, f) {\
+        files = f;\
+        build();\
+    });\
+	\
+    http.get('http://news.ycombinator.com', function(res) {\
+        var page = ''\
+        res.on('data', function(chunk) {\
+            page += chunk;\
+        });\
+        res.on('end', function() {\
+            get = page;\
+            build();\
+        });\
+    });\
+\:\>"
+					});
+				</script>
+				<div class="example_code">
+					<iframe class="example" src="/examples/async.joo"></iframe>
+				</div>
+			</div><!--End of item-->
+		</div>
+	</body>
+	<style>
+		body {
+			background-color:rgb(<:: red+","+green+","+blue :>);
+		}
+		.code {
+			color:rgb(<:: (255-red)+","+(255-green)+","+(255-blue) :>);
+		}
+	</style>
+</html>

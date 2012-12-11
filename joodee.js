@@ -177,6 +177,7 @@ var FileDescriptor = function (filename, data, callback) {
 
 		//this callback waits until all files at the current level have loaded
 		function includesLoadedCallback(err, data, path) {
+
 			loadedCount++;
 			if(err) {
 				//emit an error event here
@@ -502,6 +503,7 @@ exports.Server = function (options) {
 	console.log('Server "'+options.name+'" listening on port '+options.port);
 
 	function parse(data) {
+
 		var responseEndFound = false;
 
 		//get locations of script and output tags

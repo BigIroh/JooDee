@@ -3,8 +3,9 @@ var options = {
   name: "demo",
 	port: 8081,
 	debug: true,
-	dir: "./",
-	defaultPage: "demo.joo",
+	dir: "./demo",
+	defaultPage: "joodee.joo",
 };
 
-new JooDee.Server(options);
+var jd = new JooDee.Server(options);
+jd.listen();
