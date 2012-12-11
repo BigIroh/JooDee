@@ -1,26 +1,36 @@
 JooDee
 ======
+JooDee is a replacement for PHP or ASP using Node.js javascript. To use JooDee, embed server-side javascript on web pages using special tags.  Write to
+the page using plain HTML outside of the JooDee tags, or using the special output tag. End the response (if you are running any asyncrhonous code) using Response.end().
 
-Node.js embedded in HTML
+Easily use server-side javascript variables in your client-side javascript using the built in
+Client and Session objects.
 
 ##Dependencies##
+```
 npm install syntax-error<br>
 npm install mime
+```
 
 ##Demo##
-node demo.js<br>
+```
+node demo.js
+```
 navigate to 127.0.0.1:8081 in your browser.
 
 ##Async Demo##
 This demonstrates one way of how to build a page when async calls are involved. <br>
-
-node async-demo.js<br>
+```
+node async-demo.js
+```
 naivate to 127.0.0.1:8082 in your browser.
 
 ##Tags##
+```
 <:   :> //general purpose server-side script tag<br>
 <::  :> //shortcut for Response.write(), writes the evaluated code to the page<br>
 <::: :> //includes a .html or .joo file
+```
 
 ##Special variables##
 The variables Client and Session are available to you server-side and client-side.  
