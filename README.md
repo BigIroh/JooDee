@@ -7,10 +7,7 @@ Easily use server-side javascript variables in your client-side javascript using
 Client and Session objects.
 
 ##Dependencies##
-```
-npm install syntax-error
-npm install mime
-```
+JooDee depends on syntax-error and mime, both of which are packaged inside of node_modules.
 
 ##Demo##
 ```
