@@ -21,3 +21,17 @@ naivate to 127.0.0.1:8082 in your browser.
 <:   :> //general purpose server-side script tag<br>
 <::  :> //shortcut for Response.write(), writes the evaluated code to the page<br>
 <::: :> //includes a .html or .joo file
+
+##Special variables##
+The variables Client and Session are available to you server-side and client-side.  
+Add attributes to them to make use of them.<br>
+<pre>
+    <script type="application/javascript"> 
+    <:
+        Client.x = 5;
+    :>
+    <script type="application/javascript"> 
+        alert(Client.x); //will alert 5
+    </ script>
+    </script>
+</pre>
