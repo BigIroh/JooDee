@@ -1,8 +1,10 @@
 /* TODO
- *   9. Create a master control program to spawn/stop/restart/monitor the servers.
+ *	 9. Create a master control program to spawn/stop/restart/monitor the servers.
  *  22. Timeouts.. very important now
  *	24. Add server-wide static variable?
  *	26. pipe output to a different file for each server?
+ *  28.	Redirect to 404 pages, emit event on 404
+ *  29. Emit event on 500, set 500 event
  * DONE
  *	 1. Create a shortcut for Response.write().  Anything in between <:: and :> will be output
  *	 2. The parser should escape strings when searching for a closing :> tag
@@ -83,10 +85,7 @@ var util = require('util');
  * ]
  *
  * When the filedescriptor is done parsing files, the callback is executed. */
-var FileDescriptor = function (filename, data, callback) {
-	//extends eventEmitter
-	events.EventEmitter.call(this);
- 	
+var FileDescriptor = function (filename, data, callback) { 	
 	//construct the object
  	var fileDescriptorInstance = this;
 	var lines = data.split('\n');
@@ -200,20 +199,18 @@ var FileDescriptor = function (filename, data, callback) {
 				//recursively call this until no more includes are found
 				replaceIncludes();
 			}
-		}//end of includesLoadedCallback
-	};//end of replaceIncludes
+		}
+	};
 
 	replaceIncludes();
 
 	this.descriptor = descriptor;
 	this.getText = getText;
-}//end of FileDescriptor
+}
 
 exports.Server = function (options) {
 
 	var serverInstance = this;
-	util.inherits(serverInstance, events.EventEmitter);
-	util.inherits(FileDescriptor, events.EventEmitter);
 	events.EventEmitter.call(serverInstance);
 
 	var fs = require('fs'); //remove with parse
@@ -428,7 +425,7 @@ exports.Server = function (options) {
 		});	
 	};
 
-	//forward any uncaught exceptions as events
+	// forward any uncaught exceptions as events
 	process.on('uncaughtException', function(err) {
 		serverInstance.emit('uncaughtException', err);
 	});
@@ -459,6 +456,16 @@ exports.Server = function (options) {
 			}, requestListener);
 		break;
 	}
+
+	this.close = function(callback) {
+		server.close(callback);
+	};
+
+	this.listen = function(callback) {
+		server.listen(options.port, options.ip, callback);
+	}
+
+	this.options = options;
 
 	//foraward events from the httpServer to our server
 	server.on('request', function(req, res) {
@@ -492,7 +499,7 @@ exports.Server = function (options) {
 
 
 	server.listen(options.port, options.ip);
-	console.log('Server '+options.name+' listening on '+options.port);
+	console.log('Server "'+options.name+'" listening on port '+options.port);
 
 	function parse(data) {
 		var responseEndFound = false;
@@ -548,3 +555,4 @@ exports.Server = function (options) {
 		return scriptString;
 	}
 }
+util.inherits(exports.Server, events.EventEmitter);
