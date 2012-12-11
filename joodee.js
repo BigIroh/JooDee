@@ -82,9 +82,7 @@ var util = require('util');
  *		{file: "main.joo", text:"console.log(a+a+a);", line:3}	//third line of main.joo
  * ]
  *
- * when the filedescriptor is done parsing files, it emits the 'ready' event, which
- * should be listened to by the server so it knows when the page is ready for further
- * processing. */
+ * When the filedescriptor is done parsing files, the callback is executed. */
 var FileDescriptor = function (filename, data, callback) {
 	//extends eventEmitter
 	events.EventEmitter.call(this);
