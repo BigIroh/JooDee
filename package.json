@@ -1,0 +1,36 @@
+{
+	"name": "joodee",
+	"version": "0.0.1",
+	"author": "Iroh",
+	"description": "A webserver capable of serving pages that contain embedded Node.js code",
+	"contributors": [
+		{
+			"name": "Jake Scott",
+			"email": "scott.iroh@gmail.com"
+		},
+		{
+			"name": "Matt Scandalis",
+			"email": "scandalis.iroh@gmail.com"
+		}
+	],
+	"main": "./joodee.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/BigIroh/JooDee.git"
+	},
+	"keywords": [
+		"joo",
+		"joodee",
+		"server",
+		"webserver",
+		"web"
+	],
+	"dependencies": {
+		"mime": "*",
+		"syntax-error": "*"
+	},
+	"license": "MIT",
+	"engines": {
+		"node": ">=0.8"
+	}
+}
