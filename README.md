@@ -25,13 +25,12 @@ naivate to 127.0.0.1:8082 in your browser.
 ##Special variables##
 The variables Client and Session are available to you server-side and client-side.  
 Add attributes to them to make use of them.<br>
-<pre>
-    <script type="application/javascript"> 
+```
     <:
         Client.x = 5;
+        Session.username = "Iroh";
     :>
     <script type="application/javascript"> 
-        alert(Client.x); //will alert 5
-    </ script>
+        alert(Session.username + Client.x); //will alert Iroh5
     </script>
-</pre>
+```
