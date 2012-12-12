@@ -258,7 +258,7 @@ exports.Server = function (options) {
 	}
 
 	var handleJoo = function (req, res, filePath, data) {
-		res.setHeader("Content-Type", "text/html");
+		res.setHeader("Content-Type", "text/html; charset=utf8");
 		//get and post data
 		var GET;
 		var POST;
