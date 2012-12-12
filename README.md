@@ -19,7 +19,7 @@ This demonstrates one way of how to build a page when async calls are involved. 
 ```
 node async-demo.js
 ```
-naivate to 127.0.0.1:8082 in your browser.
+navigate to 127.0.0.1:8082 in your browser.
 
 ##Tags##
 ```
