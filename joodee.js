@@ -156,6 +156,7 @@ var FileDescriptor = function (filename, data, callback) {
 		var fs = require('fs');
 		var loadedCount = 0;
 		for(var i=0; i<includeList.length; i++) {
+
 			//only load each include 1x, and store the contents into the map 'includes,' which maps
 			//the include's path to the the file's contents.  includes[path] is set to 'true' just 
 			//before 'readFile' is called to prevent it from being included multiple times before
