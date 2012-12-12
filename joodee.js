@@ -407,29 +407,36 @@ exports.Server = function (options) {
 			console.log("Current directory is " + process.cwd() + ".");
 			console.log(e.stack);
 		}
-		var filePath = process.cwd()+path;
-		var ext = path.substring(path.lastIndexOf('.')+1);
-		fs.readFile(filePath, function (err, data) {  
-			if (err) {
-				res.writeHead(404, {'Content-Type': 'text/html'});
-				res.end('File not found.');
-			} 
-			else if (ext == 'joo') {
-				handleJoo(req, res, filePath, data);
-			}//end of .joo extension branch
-			//process non .joo files
-			else {
-				var type = require('mime').lookup(filePath);
-				res.writeHead(200, {"Content-Type" :type});
-				res.end(data);
-			}
-		});	
+		path = require('path').join(process.cwd(), path);
+		if(path.indexOf(process.cwd()) != 0) {
+			res.writeHead(403, {'Content-Type': 'text/html'});
+			res.end('Forbidden.');
+		}
+		else {
+			var ext = path.substring(path.lastIndexOf('.')+1);
+			fs.readFile(path, function (err, data) {  
+				if (err) {
+					res.writeHead(404, {'Content-Type': 'text/html'});
+					res.end('File not found.');
+				} 
+				else if (ext == 'joo') {
+					handleJoo(req, res, path, data);
+				}//end of .joo extension branch
+				//process non .joo files
+				else {
+					var type = require('mime').lookup(path);
+					res.writeHead(200, {"Content-Type" :type});
+					res.end(data);
+				}
+			});
+		}
 	};
 
 	// forward any uncaught exceptions as events
-	process.on('uncaughtException', function(err) {
+	var uncaughtExceptionHandler = function(err) {
 		serverInstance.emit('uncaughtException', err);
-	});
+	};
+	process.on('uncaughtException', uncaughtExceptionHandler);
 
 	//copy default into options if no option is set
 	if(!options) {
@@ -458,12 +465,21 @@ exports.Server = function (options) {
 		break;
 	}
 
+	//Function that closes the server and stops it from listening
 	this.close = function(callback) {
 		server.close(callback);
+		console.log('Server "'+ options.name + '" closed');
 	};
 
+	//Function takes a closed server and opens it for connections
 	this.listen = function(callback) {
 		server.listen(options.port, options.ip, callback);
+		console.log('Server "' + options.name + '" listening on port ' + options.port);
+	}
+
+	//Cleans up stray listeners before being killed
+	this.kill = function() {
+		process.removeListener('uncaughtException', uncaughtExceptionHandler);
 	}
 
 	this.options = options;

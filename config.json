@@ -1,0 +1,10 @@
+[
+	{
+		"name": "JooDee",
+		"dir": "./demo/",
+		"port": 8080,
+		"debug": true,
+		"defaultPage": "joodee.joo",
+		"timeout": 0
+	}
+]
