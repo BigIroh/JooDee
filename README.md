@@ -8,19 +8,6 @@ Client and Session objects.
 ##Dependencies##
 JooDee depends on syntax-error and mime, both of which are packaged inside of node_modules.
 
-##Demo##
-```
-node demo.js
-```
-navigate to 127.0.0.1:8081 in your browser.
-
-##Async Demo##
-This demonstrates one way of how to build a page when async calls are involved. <br>
-```
-node async-demo.js
-```
-navigate to 127.0.0.1:8082 in your browser.
-
 ##Tags##
 ```
 <:   :> //general purpose server-side script tag<br>
@@ -40,3 +27,51 @@ Add attributes to them to make use of them.<br>
         alert(Session.username + Client.x); //will alert Iroh5
     </script>
 ```
+
+##LongFeng##
+LongFeng is a program for creating and controlling JooDee instances. It initially creates them based on the `config.json` file.
+```
+    [
+        {
+    		"name": "JooDee",
+    		"dir": "./demo/",
+    		"port": 8080,
+    		"debug": true,
+    		"defaultPage": "joodee.joo",
+    		"timeout": 0
+    	},
+        {
+        	"name": "JooDee2",
+    		"dir": "./demo2/",
+    		"port": 8081,
+    		"debug": false,
+    		"defaultPage": "joodee.joo",
+    		"timeout": 0
+    	}
+    ]
+```
+It gives a console interface for controlling all of the JooDee instances.
+```
+    Command List:
+    close
+    listen
+    kill
+    load
+    reload
+    exit
+    
+    Type a "?" and a command to learn more about it.
+```
+
+##Demo##
+```
+node demo.js
+```
+navigate to 127.0.0.1:8081 in your browser.
+
+##Async Demo##
+This demonstrates one way of how to build a page when async calls are involved. <br>
+```
+node async-demo.js
+```
+navigate to 127.0.0.1:8082 in your browser.
