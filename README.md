@@ -6,7 +6,7 @@ Easily use server-side javascript variables in your client-side javascript using
 Client and Session objects.
 
 ##Dependencies##
-JooDee depends on syntax-error and mime, both of which are packaged inside of node_modules.
+JooDee depends on syntax-error and mime, both of which are packaged inside of `node_modules`.
 
 ##Tags##
 ```
@@ -53,12 +53,12 @@ LongFeng is a program for creating and controlling JooDee instances. It initiall
 It gives a console interface for controlling all of the JooDee instances.
 ```
     Command List:
-    close
-    listen
-    kill
-    load
-    reload
-    exit
+       close
+       listen
+       kill
+       load
+       reload
+       exit
     
     Type a "?" and a command to learn more about it.
 ```
@@ -67,11 +67,11 @@ It gives a console interface for controlling all of the JooDee instances.
 ```
 node demo.js
 ```
-navigate to 127.0.0.1:8081 in your browser.
+navigate to `127.0.0.1:8081` in your browser.
 
 ##Async Demo##
 This demonstrates one way of how to build a page when async calls are involved. <br>
 ```
 node async-demo.js
 ```
-navigate to 127.0.0.1:8082 in your browser.
+navigate to `127.0.0.1:8082` in your browser.

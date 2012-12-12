@@ -32,12 +32,12 @@ actions['?'] = function(params) {
 		break;
 		default:
 			console.log('Command List:');
-			console.log('close');
-			console.log('listen');
-			console.log('kill');
-			console.log('load');
-			console.log('reload');
-			console.log('exit');
+			console.log('   close');
+			console.log('   listen');
+			console.log('   kill');
+			console.log('   load');
+			console.log('   reload');
+			console.log('   exit');
 			console.log('');
 			console.log('Type a "?" and a command to learn more about it.');
 	}
@@ -128,19 +128,19 @@ fs.readFile('./config.json', 'utf8', function(err, data) {
 	}
 });
 
-process.on("uncaughtException", function(e) {
-	if(e.code == "EACCES") {
-		console.log("Could not start a server at the requested port (insufficient permissions).");
-		console.log(e.stack,"\n");
+process.on('uncaughtException', function(e) {
+	if(e.code == 'EACCES') {
+		console.log('Could not start a server at the requested port (insufficient permissions).');
+		console.log(e.stack,'\n');
 	}
 	
-	else if (e.code == "EADDRINUSE") {
-		console.log("Could not start a server at the requested port (already in use).");
-		console.log(e.stack,"\n");
+	else if (e.code == 'EADDRINUSE') {
+		console.log('Could not start a server at the requested port (already in use).');
+		console.log(e.stack,'\n');
 	}
 	
 	else {
-		console.log("Uncaught exception.",e.stack,"\n");
+		console.log('Uncaught exception.',e.stack,'\n');
 	}
 });
 
