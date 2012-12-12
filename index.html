@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>JooDee by BigIroh</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/BigIroh/JooDee">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/BigIroh/JooDee/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/BigIroh/JooDee/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>JooDee</h1>
+          <p>Node.js embedded in HTML</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/BigIroh">BigIroh</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>JooDee</h1>
+
+<p>JooDee is a replacement for PHP or ASP using Node.js javascript. To use JooDee, embed server-side javascript on web pages using special tags.  Write to
+the page using plain HTML outside of the JooDee tags, or using the special output tag. End the response (if you are running any asyncrhonous code) using Response.end().</p>
+
+<p>Easily use server-side javascript variables in your client-side javascript using the built in
+Client and Session objects.</p>
+
+<h2>Dependencies</h2>
+
+<p>JooDee depends on syntax-error and mime, both of which are packaged inside of node_modules.</p>
+
+<h2>Tags</h2>
+
+<pre><code>&lt;:   :&gt; //general purpose server-side script tag&lt;br&gt;
+&lt;::  :&gt; //shortcut for Response.write(), writes the evaluated code to the page&lt;br&gt;
+&lt;::: :&gt; //includes a .html or .joo file
+</code></pre>
+
+<h2>Special variables</h2>
+
+<p>The variables Client and Session are available to you server-side and client-side.<br>
+Add attributes to them to make use of them.<br></p>
+
+<pre><code>    &lt;:
+        Client.x = 5;
+        Session.username = "Iroh";
+    :&gt;
+    &lt;script type="application/javascript"&gt; 
+        alert(Session.username + Client.x); //will alert Iroh5
+    &lt;/script&gt;
+</code></pre>
+
+<h2>LongFeng</h2>
+
+<p>LongFeng is a program for creating and controlling JooDee instances. It initially creates them based on the <code>config.json</code> file.</p>
+
+<pre><code>    [
+        {
+            "name": "JooDee",
+            "dir": "./demo/",
+            "port": 8080,
+            "debug": true,
+            "defaultPage": "joodee.joo",
+            "timeout": 0
+        },
+        {
+            "name": "JooDee2",
+            "dir": "./demo2/",
+            "port": 8081,
+            "debug": false,
+            "defaultPage": "joodee.joo",
+            "timeout": 0
+        }
+    ]
+</code></pre>
+
+<p>It gives a console interface for controlling all of the JooDee instances.</p>
+
+<pre><code>    Command List:
+    close
+    listen
+    kill
+    load
+    reload
+    exit
+
+    Type a "?" and a command to learn more about it.
+</code></pre>
+
+<h2>Demo</h2>
+
+<pre><code>node demo.js
+</code></pre>
+
+<p>navigate to 127.0.0.1:8081 in your browser.</p>
+
+<h2>Async Demo</h2>
+
+<p>This demonstrates one way of how to build a page when async calls are involved. <br></p>
+
+<pre><code>node async-demo.js
+</code></pre>
+
+<p>navigate to 127.0.0.1:8082 in your browser.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
