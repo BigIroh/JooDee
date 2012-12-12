@@ -8,4 +8,3 @@ var options = {
 };
 
 var jd = new JooDee.Server(options);
-jd.listen();
