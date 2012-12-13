@@ -539,7 +539,7 @@ exports.Server = function (options) {
 		else {
 			server.listen(options.port, options.ip, function(){
 				Server.listening = true;
-				console.log('Server "'+options.name+'" listening');
+				console.log('Server "'+options.name+'" listening on port '+options.port);
 				if(callback) callback();
 			});
 		}
