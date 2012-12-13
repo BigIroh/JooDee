@@ -10,9 +10,14 @@ JooDee depends on syntax-error and mime, both of which are packaged inside of `n
 
 ##Tags##
 ```
-<:   :> //general purpose server-side script tag<br>
-<::  :> //shortcut for Response.write(), writes the evaluated code to the page<br>
-<::: :> //includes a .html or .joo file
+//general purpose server-side script tag
+<script type="joodee"></script>
+
+//shortcut for Response.write(), writes the evaluated code to the page
+<: must(evaluate) + " to a js string" :>
+
+//includes a .html or .joo file
+<script type="joodee" src="file/to/include.joo"/>
 ```
 
 ##Special variables##
