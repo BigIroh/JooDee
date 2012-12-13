@@ -1,22 +1,22 @@
 <!DOCTYPE>
 <html>
-	<:
-	//generate background and font colors
-	var red = Math.floor(Math.random()*100) + 100;
-	var green = Math.floor(Math.random()*100) + 125;
-	var blue = Math.floor(Math.random()*100) + 125;
+	<script type="joodee">
+		//generate background and font colors
+		var red = Math.floor(Math.random()*100) + 100;
+		var green = Math.floor(Math.random()*100) + 125;
+		var blue = Math.floor(Math.random()*100) + 125;
 
-	var sayings = [
-		"<b>JooDee</b> is bringing <span class='code'>Javascript</span> back to the browser.",
-		"<b>JooDee</b> is a single language for the client and server.",
-		"<b>JooDee</b> sticks <span class='code'>Node.js</span> into your web pages.",
-		"<b>JooDee</b> is serving up asynchronous <span class='code'>Javascript</span>.",
-		"Everyone in Ba Sing Se loves <b>JooDee</b>.",
-		"Learning curve? <b>JooDee</b> is the same <span class='code'>Javascript</span> you know and love.",
-	];
+		var sayings = [
+			"<b>JooDee</b> is bringing <span class='code'>Javascript</span> back to the browser.",
+			"<b>JooDee</b> is a single language for the client and server.",
+			"<b>JooDee</b> sticks <span class='code'>Node.js</span> into your web pages.",
+			"<b>JooDee</b> is serving up asynchronous <span class='code'>Javascript</span>.",
+			"Everyone in Ba Sing Se loves <b>JooDee</b>.",
+			"Learning curve? <b>JooDee</b> is the same <span class='code'>Javascript</span> you know and love.",
+		];
 
-	var motv = sayings[Math.floor(Math.random()*sayings.length)]; //message of the visit
-	:>
+		var motv = sayings[Math.floor(Math.random()*sayings.length)]; //message of the visit
+	</script>
 	<head>
 		<title>JooDee</title>
 		<link rel="stylesheet" type="text/css" href="iroh.css">
@@ -32,19 +32,12 @@
 	    <script type="text/javascript" src="codemirror/mode/htmlembedded/htmlembedded.js"></script>
 	</head>
 	<body>
-		<div class="motv"><::motv:></div>
+		<div class="motv"><:motv:></div>
 		<div class="content">
 			<div class="item">
 				<div class="header">
 					What is JooDee?
 				</div>
-				<:
-					//sweet other line of code
-					console.log("joodee is fun.")
-					//debugging.is.cool = true;
-					var x = "meaningless";
-					var y = "lame";
-				:>
 				JooDee is web server built on Node.js which lets you create web pages powered by
 				server side Javascript.  In the style of PHP, ASP, or Coldfusion, you create a page 
 				consisting of HTML and some serverside code.  JooDee interprets that code and spits
@@ -62,18 +55,13 @@
 						readOnly: true,
        					mode: "application/x-ejs",
        					tabSize: 3,
-       					value: "<html>\
-	\<\: \
-		Session.username = 'jscott';	//this is serverside JS\
-	\:\>\
-	<body>\
-		<!-- go on about your normal html business -->\
-	</body>\
-</html>"
+       					value: ""
 					});
 				</script>
 
 			</div><!--End of item-->
+
+
 			<div class="item">
 				<div class="header">
 					Seamless Client/Server Scripting
@@ -92,26 +80,12 @@
 						readOnly: true,
        					mode: "application/x-ejs",
        					tabSize: 3,
-       					value: 	"\<\: \
-   //set some variables server-side...\
-	Client.favoriteNumber = 3;\
-	Client.favoriteColor = 'blue';\
-\:\>\
-<html>\
-	<body>\
-		<script>\
-			function demo() {\
-				//...and access them client-side.  This will alert 'blue' three times.\
-				for(var i=0; i<Client.favoriteNumber; i++) {\
-					alert(Client.color + ' ' + i)\
-				}\
-			}\
-		<\\/script>\
-	</body>\
-</html>"
+       					value: 	""
 					});
 				</script>
 			</div><!--End of item-->
+
+
 			<div class="item">
 				<div class="header">
 					Asynchronous I/O
@@ -129,51 +103,7 @@
 						readOnly: true,
        					mode: "application/x-ejs",
        					tabSize: 3,
-       					value: 	"\<\:\
-    var fs = require('fs');\
-    var http = require('http');\
-    \
-    var files = null;\
-    var get = null;\
-    var build = function(part) {\
-    	  //we make sure all our async functions have completed before writing the response\
-        if(files && get) {\
-            \:\>\
-                <html>\
-                    <body>\
-                        \<\:\
-                            for(f in files) {\
-                        \:\>\
-                                \<\:: files[f] \:\>,&nbsp;\
-                        \<\:\
-                            }\
-                        \:\>\
-                        <pre>\
-                            \<\:: get \:\>\
-                        </pre>\
-                    </body>\
-                </html>\
-            \<\:\
-            Response.end();\
-        }\
-    }\
-\
-    fs.readdir('.', function(err, f) {\
-        files = f;\
-        build();\
-    });\
-	\
-    http.get('http://news.ycombinator.com', function(res) {\
-        var page = ''\
-        res.on('data', function(chunk) {\
-            page += chunk;\
-        });\
-        res.on('end', function() {\
-            get = page;\
-            build();\
-        });\
-    });\
-\:\>"
+       					value: 	""
 					});
 				</script>
 				<div class="example_code">
@@ -184,10 +114,10 @@
 	</body>
 	<style>
 		body {
-			background-color:rgb(<:: red+","+green+","+blue :>);
+			background-color:rgb(<: red+","+green+","+blue :>);
 		}
 		.code {
-			color:rgb(<:: (255-red)+","+(255-green)+","+(255-blue) :>);
+			color:rgb(<: (255-red)+","+(255-green)+","+(255-blue) :>);
 		}
 	</style>
 </html>

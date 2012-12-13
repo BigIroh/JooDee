@@ -1,4 +1,4 @@
-<:
+<script type="joodee">
     var fs = require('fs');
     var http = require('http');
     
@@ -6,23 +6,21 @@
     var get = null;
     var build = function(part) {
         if(files && get) {
-            :>
+            </script>
             <!DOCTYPE html>
             <html>
                 <body>
-                <:
+                <script type="joodee">
                     for(f in files) {
-                        :>
-                        <:: files[f] :>,&nbsp;
-                        <:
+                        Response.write(files[f]+' ')
                     }
-                :>
+                    </script>
                     <pre>
-                        <:: get :>
+                        <: get :>
                     </pre>
                 </body>
             </html>
-            <:
+            <script type="joodee">
             Response.end();
         }
     }
@@ -42,4 +40,4 @@
             build();
         });
     });
-:>
+</script>

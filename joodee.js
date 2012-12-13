@@ -297,7 +297,7 @@ exports.Server = function (options) {
 	}
 
 	var handleJoo = function (req, res, filePath, data) {
-		res.setHeader("Content-Type", "text/html");
+		res.setHeader("Content-Type", "text/html; charset=utf8");
 		//if this page doesnt have a static variable created for it yet, create one now
 		if(typeof pageObjects[filePath] == "undefined") {
 			pageObjects[filePath] = {};
@@ -463,7 +463,7 @@ exports.Server = function (options) {
 			//process non .joo files
 			else {
 				var type = require('mime').lookup(filePath);
-				res.writeHead(200, {"Content-Type" :type});
+				res.writeHead(200, {'Content-Type' :type + (type=='text/html' ?  'charset=utf8' : '')});
 				res.end(data);
 			}
 		});	
