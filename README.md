@@ -31,10 +31,10 @@ Includes a .html or .joo file
 The variables `Client` and `Session` are available to you server-side and client-side.  
 Add attributes to them to make use of them.<br>
 ```
-    <script type="joodee">
+    <:
         Client.x = 5;
         Session.username = "Iroh";
-    </script>
+    :>
     
     <script type="application/javascript"> 
         alert(Session.username + Client.x); //will alert Iroh5
@@ -45,10 +45,10 @@ specific to a given page, as well as `GET` and `POST`, which hold the GET or POS
 sent in the request.  These three variables, `Page`, `GET`, and `POST` are available server-side,
 but you can easily expose them to the client:
 ```
-    <script type="joodee">
+    <:
         Client.GET = GET;
         Client.POST = POST;
-    </script>
+    :>
     
     <script type="application/javascript">
         console.log(Client.GET);
