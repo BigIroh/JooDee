@@ -24,10 +24,11 @@ JooDee depends on syntax-error and mime, both of which are packaged inside of `n
 The variables Client and Session are available to you server-side and client-side.  
 Add attributes to them to make use of them.<br>
 ```
-    <:
+    <script type="joodee">
         Client.x = 5;
         Session.username = "Iroh";
-    :>
+    </script>
+    
     <script type="application/javascript"> 
         alert(Session.username + Client.x); //will alert Iroh5
     </script>
