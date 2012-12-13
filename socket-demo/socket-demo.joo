@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<:
+	if(!Page.initialized) {
+		Page.clients = [];
+		var WebSocketServer = require('websocket').server;
+		var http = require('http');
+
+		var httpServer = http.createServer();
+		httpServer.listen(8084);
+
+		Page.wsServer = new WebSocketServer({httpServer: httpServer});
+
+		Page.wsServer.on('request', function(request) {
+	    	console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
+
+	   		var connection = request.accept(null, request.origin); 
+			var index = Page.clients.push(connection) - 1;
+			connection.on('message', function(message) {
+				console.log(message);
+			});
+
+		    // user disconnected
+			connection.on('close', function(connection) {
+				console.log(connection);
+			});
+		});
+		Page.initialized = true;
+	}
+:>
+<html>
+	<head>
+		<script type="application/javascript">
+	 		var connection = new WebSocket('ws://127.0.0.1:8084');
+	 		console.log(connection);
+	 		connection.onopen = function () {
+				// connection is opened and ready to use
+				connection.send('{"hello":"world"}');
+			};
+
+			connection.onerror = function (error) {
+				// an error occurred when sending/receiving data
+			};
+
+			connection.onmessage = function (message) {
+				// try to decode json (I assume that each message from server is json)
+				try {
+					var json = JSON.parse(message.data);
+				}
+				catch (e) {
+					console.log("This doesn't look like a valid JSON: ", message.data);
+					return;
+				}
+			};
+	 	</script>
+	</head>
+	<body>
+	</body>
+</html>

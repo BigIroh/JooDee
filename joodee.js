@@ -32,7 +32,7 @@
 
 
 //Run the generated page code in a clean namespace
-var JooDee = function( GET, POST, Session, Client, Page, Response) {
+var JooDee = function( GET, POST, Session, Client, Server, Page, Response) {
 	eval(Response.scriptString);
 	return {
 		client: Client,
@@ -43,9 +43,9 @@ var JooDee = function( GET, POST, Session, Client, Page, Response) {
 /* Runs the page after exporting it and requiring it (this gets us line numbers for errors!)
  * The callback executes after the script finishes executing, and passes an error if one
  * exists. */
-var JooDebugger = function(GET, POST, Session, Client, Page, Response, debugFilename, callback) {
+var JooDebugger = function(GET, POST, Session, Client, Server, Page, Response, debugFilename, callback) {
 	//wrap scriptstring in a module so we can execute it in a separate file
-	Response.scriptString = "exports.run = function(GET, POST, Session, Client, Page, Response) { try{" +
+	Response.scriptString = "exports.run = function(GET, POST, Session, Client, Server, Page, Response) { try{" +
 		Response.scriptString + "} catch(e){" +
 		"var str = e.stack.split('\\n')[1];" +
 		"var col = str.split(':');" +
@@ -61,7 +61,7 @@ var JooDebugger = function(GET, POST, Session, Client, Page, Response, debugFile
 		}
 		else {
 			delete require.cache[require.resolve(debugFilename)];
-			var runtimeError = require(debugFilename).run(GET, POST, Session, Client, Page, Response);
+			var runtimeError = require(debugFilename).run(GET, POST, Session, Client, Server, Page, Response);
 			fs.unlinkSync(debugFilename);
 			callback(runtimeError);
 		}
@@ -242,6 +242,14 @@ var parse = function(data) {
 		}
 		start = result.index + result[0].length;
 	}
+	//get all html left over
+	scriptString += 'Response.write("'+
+		data.substring(start, data.length)
+			.replace(/\"/gm,'\\"')
+			.replace(/\r/gm,"")
+			.replace(/\n/gm,"\\n\\\n")
+			.replace("/\\/gm","\\\\") +
+			'");';
 
 	if(!responseEndFound) scriptString += "Response.end();";
 	return scriptString;
@@ -409,7 +417,7 @@ exports.Server = function (options) {
 			}
 			else if(options.debug) {
 				var debugFilename = filePath.split('.joo')[0] + "_debug.js";
-				JooDebugger.call({},  GET, POST, Session, Client, pageObjects[filePath], Response, debugFilename, function(runtimeError) {
+				JooDebugger.call({},  GET, POST, Session, Client, serverInstance.Server, pageObjects[filePath], Response, debugFilename, function(runtimeError) {
 					if(runtimeError) {
 						outputErrorMessage(runtimeError, 'Runtime Error');
 						serverInstance.emit('runtimeError', runtimeError);
@@ -419,7 +427,7 @@ exports.Server = function (options) {
 			}
 			else {
 				//prevent shit like this = {} from killing everyone
-				JooDee.call({},  GET, POST, Session, Client, pageObjects[filePath], Response);	
+				JooDee.call({},  GET, POST, Session, Client, serverInstance.Server, pageObjects[filePath], Response);	
 			}
 			
 		});//end of FileDescriptor call
