@@ -18,10 +18,14 @@ General purpose server-side script tag
 ```
 
 Shortcut for Response.write(), writes the evaluated code to the page.  Must be outside of script tags.
-`<:: must('evaluate') + ' to a js string' :>`
+```
+<:: must('evaluate') + ' to a js string' :>
+```
 
 Includes a .html or .joo file
-`<::: file/path/here.joo :>`
+```
+<::: file/path/here.joo :>
+```
 
 ##Special variables##
 The variables `Client` and `Session` are available to you server-side and client-side.  
