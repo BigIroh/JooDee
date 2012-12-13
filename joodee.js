@@ -126,7 +126,7 @@ var FileDescriptor = function (filename, data, callback) {
 	//until there are no more to replace
 	function replaceIncludes() {
 		//finds things in the form of <script type='joodee' src='blah'/> or <script src="blah" type="blah"/>
-		var reInclude = /<script.*?(type\s*?=\s*?[\'\"]joodee[\'\"].*?src\s*?=\s*?[\'\"](.*?)[\'\"]|src\s*?=\s*?[\'\"](.*?)[\'\"]\s*?type\s*?=\s*?[\'\"]joodee[\'\"].*?)\/>/gmi;
+		var reInclude = /<:::(.*?):>/gmi;
 		var includeList = [];	//keeps track of all files that need to be included in this iteration
 		for(var i=0; i<descriptor.length; i++) {
 			var result = reInclude.exec(descriptor[i].text);
@@ -135,7 +135,7 @@ var FileDescriptor = function (filename, data, callback) {
 			//entry containing the path and line number for the include.  The file itself is not
 			//loaded yet.
 			if(result) {
-				var includePath = (result[2] || result[3]);
+				var includePath = result[1];
 				includeList.push({path: includePath, line: i});
 
 				//split the current line on to a new line
@@ -216,8 +216,7 @@ var FileDescriptor = function (filename, data, callback) {
  * during the parsing. */
 var parse = function(data) {
 	var responseEndFound = false;
-	var reScript = /(<script\s+type\s*=\s*[\'\"]joodee[\'\"]\s*>([\s\S]*?)<\/script>|<:([\s\S]*?):>)/gm;
-
+	var reScript = /<::?([\s\S]*?):>/gm;
 	var scriptString = 'delete Response.scriptString;';
 
 	var start = 0;
@@ -232,12 +231,12 @@ var parse = function(data) {
 				'");';
 
 		//output tag
-		if(result[0].charAt(1)==':') {
-			scriptString += 'Response.write(' + result[3] + ');';
+		if(result[0].charAt(2)==':') {
+			scriptString += 'Response.write(' + result[1] + ');';
 		}
 		else {
-			scriptString += result[2];	//actual code to be executed
-			if(result[2].indexOf("Response.end()") >= 0) {
+			scriptString += result[1];	//actual code to be executed
+			if(result[1].indexOf("Response.end()") >= 0) {
 				responseEndFound = true;
 			}
 		}
