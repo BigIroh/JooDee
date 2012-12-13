@@ -32,7 +32,7 @@
 
 
 //Run the generated page code in a clean namespace
-var JooDee = function( GET, POST, Session, Client, Response) {
+var JooDee = function( GET, POST, Session, Client, Page, Response) {
 	eval(Response.scriptString);
 	return {
 		client: Client,
@@ -43,10 +43,9 @@ var JooDee = function( GET, POST, Session, Client, Response) {
 /* Runs the page after exporting it and requiring it (this gets us line numbers for errors!)
  * The callback executes after the script finishes executing, and passes an error if one
  * exists. */
-var JooDebugger = function(GET, POST, Session, Client, Response, debugFilename, callback) {
-	
+var JooDebugger = function(GET, POST, Session, Client, Page, Response, debugFilename, callback) {
 	//wrap scriptstring in a module so we can execute it in a separate file
-	Response.scriptString = "exports.run = function(GET, POST, Session, Client, Response) { try{" +
+	Response.scriptString = "exports.run = function(GET, POST, Session, Client, Page, Response) { try{" +
 		Response.scriptString + "} catch(e){" +
 		"var str = e.stack.split('\\n')[1];" +
 		"var col = str.split(':');" +
@@ -62,7 +61,7 @@ var JooDebugger = function(GET, POST, Session, Client, Response, debugFilename, 
 		}
 		else {
 			delete require.cache[require.resolve(debugFilename)];
-			var runtimeError = require(debugFilename).run(GET, POST, Session, Client, Response);
+			var runtimeError = require(debugFilename).run(GET, POST, Session, Client, Page, Response);
 			fs.unlinkSync(debugFilename);
 			callback(runtimeError);
 		}
@@ -116,7 +115,7 @@ var FileDescriptor = function (filename, data, callback) {
 	var addContent = function(filename, content, line) {
 		var relativeLine = 1;
 		var includeDescriptor = content.split('\n').map( function(text) {
-			return new LineDescriptor(filename, content, relativeLine++);
+			return new LineDescriptor(filename, text, relativeLine++);
 		});
 		var args = [line+1, 0].concat(includeDescriptor);
 		Array.prototype.splice.apply(descriptor, args);
@@ -126,7 +125,8 @@ var FileDescriptor = function (filename, data, callback) {
 	//the event 'ready' if there are no more to replace.  This will call itself recursively
 	//until there are no more to replace
 	function replaceIncludes() {
-		var reInclude = /<:::([\s\S]*?):>/;
+		//finds things in the form of <script type='joodee' src='blah'/> or <script src="blah" type="blah"/>
+		var reInclude = /<script.*?(type\s*?=\s*?[\'\"]joodee[\'\"].*?src\s*?=\s*?[\'\"](.*?)[\'\"]|src\s*?=\s*?[\'\"](.*?)[\'\"]\s*?type\s*?=\s*?[\'\"]joodee[\'\"].*?)\/>/gmi;
 		var includeList = [];	//keeps track of all files that need to be included in this iteration
 		for(var i=0; i<descriptor.length; i++) {
 			var result = reInclude.exec(descriptor[i].text);
@@ -135,15 +135,16 @@ var FileDescriptor = function (filename, data, callback) {
 			//entry containing the path and line number for the include.  The file itself is not
 			//loaded yet.
 			if(result) {
-				var includePath = result[0].substring(4, result[0].length-2).trim();
+				var includePath = (result[2] || result[3]);
 				includeList.push({path: includePath, line: i});
 
 				//split the current line on to a new line
 				var extraText = descriptor[i].text.substring(result.index + result[0].length);
 				descriptor[i].text = descriptor[i].text.substring(0, result.index);
 				descriptor.splice(i, 0, 
-					new LineDescriptor(descriptor[i].file, extraText, descriptor[i].line));					
+					new LineDescriptor(descriptor[i].file, extraText, descriptor[i].line));
 			}
+
 		}
 
 		//base case for recursion
@@ -156,6 +157,7 @@ var FileDescriptor = function (filename, data, callback) {
 		var fs = require('fs');
 		var loadedCount = 0;
 		for(var i=0; i<includeList.length; i++) {
+
 			//only load each include 1x, and store the contents into the map 'includes,' which maps
 			//the include's path to the the file's contents.  includes[path] is set to 'true' just 
 			//before 'readFile' is called to prevent it from being included multiple times before
@@ -208,8 +210,46 @@ var FileDescriptor = function (filename, data, callback) {
 	this.getText = getText;
 }
 
-exports.Server = function (options) {
+/* Given the raw text of the file we're serving, build the script that will be
+ * eval'd later in the program.  Escape all fancy characters (new lines, etc).
+ * Appends Response.end() at the bottom of the script if it was not encountered
+ * during the parsing. */
+var parse = function(data) {
+	var responseEndFound = false;
+	var reScript = /(<script\s+type\s*=\s*[\'\"]joodee[\'\"]\s*>([\s\S]*?)<\/script>|<:([\s\S]*?):>)/gm;
 
+	var scriptString = 'delete Response.scriptString;';
+
+	var start = 0;
+	while((result = reScript.exec(data)) !== null) {
+		//get all html before this scripttag pair
+		scriptString += 'Response.write("'+
+			data.substring(start, result.index)
+				.replace(/\"/gm,'\\"')
+				.replace(/\r/gm,"")
+				.replace(/\n/gm,"\\n\\\n")
+				.replace("/\\/gm","\\\\") +
+				'");';
+
+		//output tag
+		if(result[0].charAt(1)==':') {
+			scriptString += 'Response.write(' + result[3] + ');';
+		}
+		else {
+			scriptString += result[2];	//actual code to be executed
+			if(result[2].indexOf("Response.end()") >= 0) {
+				responseEndFound = true;
+			}
+		}
+		start = result.index + result[0].length;
+	}
+
+	if(!responseEndFound) scriptString += "Response.end();";
+	return scriptString;
+};
+
+exports.Server = function (options) {
+	var pageObjects = {};
 	var serverInstance = this;
 	events.EventEmitter.call(serverInstance);
 
@@ -257,7 +297,12 @@ exports.Server = function (options) {
 	}
 
 	var handleJoo = function (req, res, filePath, data) {
-		res.setHeader("Content-Type", "text/html; charset=utf8");
+		res.setHeader("Content-Type", "text/html");
+		//if this page doesnt have a static variable created for it yet, create one now
+		if(typeof pageObjects[filePath] == "undefined") {
+			pageObjects[filePath] = {};
+		}
+
 		//get and post data
 		var GET;
 		var POST;
@@ -307,7 +352,6 @@ exports.Server = function (options) {
 		}
 
 		new FileDescriptor(filePath, data+'', function(text, descriptor, includes) {
-
 			var scriptString = parse(text);
 			var check = require('syntax-error');
 			var syntaxError = check(scriptString, "");
@@ -366,7 +410,7 @@ exports.Server = function (options) {
 			}
 			else if(options.debug) {
 				var debugFilename = filePath.split('.joo')[0] + "_debug.js";
-				JooDebugger.call({},  GET, POST, Session, Client, Response, debugFilename, function(runtimeError) {
+				JooDebugger.call({},  GET, POST, Session, Client, pageObjects[filePath], Response, debugFilename, function(runtimeError) {
 					if(runtimeError) {
 						outputErrorMessage(runtimeError, 'Runtime Error');
 						serverInstance.emit('runtimeError', runtimeError);
@@ -376,7 +420,7 @@ exports.Server = function (options) {
 			}
 			else {
 				//prevent shit like this = {} from killing everyone
-				JooDee.call({},  GET, POST, Session, Client, Response);	
+				JooDee.call({},  GET, POST, Session, Client, pageObjects[filePath], Response);	
 			}
 			
 		});//end of FileDescriptor call
@@ -406,36 +450,30 @@ exports.Server = function (options) {
 			console.log("Current directory is " + process.cwd() + ".");
 			console.log(e.stack);
 		}
-		path = require('path').join(process.cwd(), path);
-		if(path.indexOf(process.cwd()) != 0) {
-			res.writeHead(403, {'Content-Type': 'text/html'});
-			res.end('Forbidden.');
-		}
-		else {
-			var ext = path.substring(path.lastIndexOf('.')+1);
-			fs.readFile(path, function (err, data) {  
-				if (err) {
-					res.writeHead(404, {'Content-Type': 'text/html'});
-					res.end('File not found.');
-				} 
-				else if (ext == 'joo') {
-					handleJoo(req, res, path, data);
-				}//end of .joo extension branch
-				//process non .joo files
-				else {
-					var type = require('mime').lookup(path);
-					res.writeHead(200, {"Content-Type" :type});
-					res.end(data);
-				}
-			});
-		}
+		var filePath = process.cwd()+path;
+		var ext = path.substring(path.lastIndexOf('.')+1);
+		fs.readFile(filePath, function (err, data) {  
+			if (err) {
+				res.writeHead(404, {'Content-Type': 'text/html'});
+				res.end('File not found.');
+			} 
+			else if (ext == 'joo') {
+				handleJoo(req, res, filePath, data);
+			}//end of .joo extension branch
+			//process non .joo files
+			else {
+				var type = require('mime').lookup(filePath);
+				res.writeHead(200, {"Content-Type" :type});
+				res.end(data);
+			}
+		});	
 	};
 
 	// forward any uncaught exceptions as events
-	var uncaughtExceptionHandler = function(err) {
+	process.on('uncaughtException', function(err) {
 		serverInstance.emit('uncaughtException', err);
-	};
-	process.on('uncaughtException', uncaughtExceptionHandler);
+		console.log("Uncaught exception: ",err.stack);
+	});
 
 	//copy default into options if no option is set
 	if(!options) {
@@ -464,23 +502,20 @@ exports.Server = function (options) {
 		break;
 	}
 
-	//Function that closes the server and stops it from listening
 	this.close = function(callback) {
 		server.close(callback);
-		console.log('Server "'+ options.name + '" closed');
 	};
 
-	//Function takes a closed server and opens it for connections
 	this.listen = function(callback) {
 		server.listen(options.port, options.ip, callback);
-		console.log('Server "' + options.name + '" listening on port ' + options.port);
 	}
 
-	//Cleans up stray listeners before being killed
-	this.kill = function() {
-		process.removeListener('uncaughtException', uncaughtExceptionHandler);
-	}
+	this.httpServer = function() {
+		return server
+	};
+	
 
+	this.Server = {httpServer: server};
 	this.options = options;
 
 	//foraward events from the httpServer to our server
@@ -516,60 +551,5 @@ exports.Server = function (options) {
 
 	server.listen(options.port, options.ip);
 	console.log('Server "'+options.name+'" listening on port '+options.port);
-
-	function parse(data) {
-
-		var responseEndFound = false;
-
-		//get locations of script and output tags
-		var reScript = /<:([\s\S]*?):>/gm;
-		var scriptSpans = [];	//array of [start,end] pairs indicating where tags are
-		while((result = reScript.exec(data)) !== null) {
-			scriptSpans.push([result.index, result.index + result[0].length]);
-		}
-
-		//loop through all scripts, writing out the text between the scripts.
-		var scriptString = 'delete Response.scriptString;';	//builds the entire script
-		
-		var start = 0;
-		for(var i=0; i<scriptSpans.length; i++) {
-			scriptString += 'Response.write("'+
-				data.substring(start,scriptSpans[i][0])
-					.replace(/\"/gm,'\\"')
-					.replace(/\r/gm,"")
-					.replace(/\n/gm,"\\n\\\n")
-					.replace("/\\/gm","\\\\") +
-				'");';
-
-			//determine output or script tag, eval etc
-			var snippet = data.substring(scriptSpans[i][0], scriptSpans[i][1]);
-			if(snippet.charAt(2) == ':') { //output tag
-				snippet = snippet.substring(3,snippet.length-2);
-				snippet = "Response.write(" + snippet + "+'');";
-			}
-			else {
-				//check for response end
-				if(snippet.indexOf("Response.end()") >= 0) {
-					responseEndFound = true;
-				}
-				snippet = snippet.substring(2,snippet.length-2);
-			}
-			scriptString += snippet;
-			start = scriptSpans[i][1];
-		}
-
-		scriptString += 'Response.write("'+
-			data.substring(start)
-				.replace(/\"/gm,'\\"')
-				.replace(/\r/gm,"")
-				.replace(/\n/gm,"\\n\\\n")
-				.replace("/\\/gm","\\\\")+
-			'");\n';
-		
-		//append response.end if none was found
-		if(!responseEndFound) scriptString += "Response.end();";
-
-		return scriptString;
-	}
 }
 util.inherits(exports.Server, events.EventEmitter);
