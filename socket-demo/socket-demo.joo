@@ -1,58 +1,71 @@
 <!DOCTYPE html>
 <:
 	if(!Page.initialized) {
-		Page.clients = [];
-		var WebSocketServer = require('websocket').server;
-		var http = require('http');
+		try{
+			Page.clients = [];
+			var WebSocketServer = require('websocket').server;
+			var http = require('http');
 
-		var httpServer = http.createServer();
-		httpServer.listen(8084);
+			var httpServer = http.createServer();
+			httpServer.listen(8084);
 
-		Page.wsServer = new WebSocketServer({httpServer: httpServer});
+			Page.wsServer = new WebSocketServer({httpServer: httpServer});
 
-		Page.wsServer.on('request', function(request) {
-	    	console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
+			Page.wsServer.on('request', function(request) {
 
-	   		var connection = request.accept(null, request.origin); 
-			var index = Page.clients.push(connection) - 1;
-			connection.on('message', function(message) {
-				console.log(message);
+		   		var connection = request.accept(null, request.origin); 
+				var index = Page.clients.push(connection) - 1;
+		    	console.log(Page.clients.length + " clients connected.");
+				connection.on('message', function(message) {
+					console.log(message.utf8Data);
+					for(i in Page.clients)
+						Page.clients[i].send(message.utf8Data);
+				});
+
+			    // user disconnected
+				connection.on('close', function(connection) {
+					Page.clients.splice(index, 1);
+					console.log(index+ ' closed');
+				});
 			});
-
-		    // user disconnected
-			connection.on('close', function(connection) {
-				console.log(connection);
-			});
-		});
-		Page.initialized = true;
+			Page.initialized = true;
+		}
+		catch(err) {
+			console.log(err);
+		}
 	}
 :>
 <html>
 	<head>
+		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
 		<script type="application/javascript">
-	 		var connection = new WebSocket('ws://127.0.0.1:8084');
-	 		console.log(connection);
-	 		connection.onopen = function () {
-				// connection is opened and ready to use
-				connection.send('{"hello":"world"}');
-			};
+			$(document).ready(function() {
+		 		var connection = new WebSocket('ws://127.0.0.1:8084');
+		 		console.log(connection);
+		 		connection.onopen = function () {
+					// connection is opened and ready to use
+					$('#input').keydown(function(e) {
+						if(e.keyCode == 13) {
+							connection.send( $('#input').val() );
+							$('#input').val('');
+						}
+					});
+				};
 
-			connection.onerror = function (error) {
-				// an error occurred when sending/receiving data
-			};
+				connection.onerror = function (error) {
+					// an error occurred when sending/receiving data
+				};
 
-			connection.onmessage = function (message) {
-				// try to decode json (I assume that each message from server is json)
-				try {
-					var json = JSON.parse(message.data);
-				}
-				catch (e) {
-					console.log("This doesn't look like a valid JSON: ", message.data);
-					return;
-				}
-			};
+				connection.onmessage = function (message) {
+					// try to decode json (I assume that each message from server is json)
+					console.log(message.data);
+					$('#messageContainer').append('<div>'+message.data+'</div>');
+				};
+			});
 	 	</script>
 	</head>
 	<body>
+		<input type="text" id="input">
+		<div id="messageContainer"></div>
 	</body>
 </html>
