@@ -21,7 +21,7 @@ JooDee depends on syntax-error and mime, both of which are packaged inside of `n
 ```
 
 ##Special variables##
-The variables Client and Session are available to you server-side and client-side.  
+The variables `Client` and `Session` are available to you server-side and client-side.  
 Add attributes to them to make use of them.<br>
 ```
     <script type="joodee">
@@ -33,9 +33,26 @@ Add attributes to them to make use of them.<br>
         alert(Session.username + Client.x); //will alert Iroh5
     </script>
 ```
-
+You also have access to the variable `Page`, which is a static single variable that is 
+specific to a given page, as well as `GET` and `POST`, which hold the GET or POST data
+sent in the request.  These three variables, `Page`, `GET`, and `POST` are available server-side,
+but you can easily expose them to the client:
+```
+    <script type="joodee">
+        Client.GET = GET;
+        Client.POST = POST;
+    </script>
+    
+    <script type="application/javascript">
+        console.log(Client.GET);
+    </script>
+    
+```
+Note: changes to any of these special variables client-side will not be reflected server-side,
+with the exception of `Session` (and even those changes would require the page to be reloaded).
 ##LongFeng##
-LongFeng is a program for creating and controlling JooDee instances. It initially creates them based on the `config.json` file.
+LongFeng is a program for creating and controlling JooDee instances. It initially 
+creates them based on the `config.json` file.
 ```
     [
         {
