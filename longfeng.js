@@ -55,7 +55,10 @@ actions['close'] =  function(params) {
 	var names = params.split(' ');
 	for (n in names) {
 		var name = names[n];
-		servers[name].close();
+		if(servers[name]) {
+			var name = names[n];
+			servers[name].close();
+		}
 	}
 };
 
@@ -64,7 +67,10 @@ actions['listen'] =  function(params) {
 	var names = params.split(' ');
 	for (n in names) {
 		var name = names[n];
-		servers[name].listen();
+		if(servers[name]) {
+			var name = names[n];
+			servers[name].listen();
+		}
 	}
 };
 
@@ -74,9 +80,11 @@ actions['kill'] =  function(params) {
 	actions['close'](params);
 	for (n in names) {
 		var name = names[n];
-		servers[name].kill();
-		servers[name] = null;
-		console.log('Server "'+ name + '" killed');
+		if(servers[name]) {
+			var name = names[n];
+			servers[name].kill();
+			servers[name] = null;
+		}
 	}
 };
 
@@ -109,6 +117,25 @@ actions['reload'] = function(params) {
 	actions['kill'](params);
 	actions['load'](params);
 };
+
+actions['status'] = function(params) {
+	if(params) {
+		var names = params.split(' ');
+		for (n in names) {
+			var name = names[n];
+			if(servers[name]) {
+				var name = names[n];
+				servers[name].status();
+			}
+		}
+	}
+	else {
+		for(s in servers) {
+			var server = servers[s];
+			if (server) server.status();
+		}
+	}
+}
 
 var servers = [];
 

@@ -476,11 +476,13 @@ exports.Server = function (options) {
 		});	
 	};
 
-	// forward any uncaught exceptions as events
-	process.on('uncaughtException', function(err) {
+	var uncaughtException = function(err) {
 		serverInstance.emit('uncaughtException', err);
 		console.log("Uncaught exception: ",err.stack);
-	});
+	};
+
+	// forward any uncaught exceptions as events
+	process.on('uncaughtException', uncaughtException);
 
 	//copy default into options if no option is set
 	if(!options) {
@@ -509,21 +511,55 @@ exports.Server = function (options) {
 		break;
 	}
 
+	this.Server = {
+		httpServer: server,
+		listening: false
+	};
+	var Server = this.Server;
+
+	this.options = options;
+
 	this.close = function(callback) {
-		server.close(callback);
+		if(Server.listening) {
+			server.close(function(){
+				Server.listening = false;
+				console.log('Server "'+options.name+'" closed');
+				if(callback) callback();
+			});
+		}
+		else {
+			console.log('Server "'+options.name+'" already closed');
+		}
 	};
 
 	this.listen = function(callback) {
-		server.listen(options.port, options.ip, callback);
+		if(Server.listening) {
+			console.log('Server "'+options.name+'" already listening');
+		}
+		else {
+			server.listen(options.port, options.ip, function(){
+				Server.listening = true;
+				console.log('Server "'+options.name+'" listening');
+				if(callback) callback();
+			});
+		}
+	}
+
+	this.kill = function(callback) {
+		process.removeListener('uncaughtException', uncaughtException);
+		console.log('Server "'+options.name+'" killed');
+		if(callback) callback();
+	}
+
+	this.status = function() {
+		console.log('Server "'+options.name+'" is ' + (Server.listening ? '' : 'not ') + 'currently listening');
+		return Server.listening;
 	}
 
 	this.httpServer = function() {
 		return server
 	};
 	
-
-	this.Server = {httpServer: server};
-	this.options = options;
 
 	//foraward events from the httpServer to our server
 	server.on('request', function(req, res) {
@@ -554,9 +590,6 @@ exports.Server = function (options) {
 		serverInstance.emit('clientError', exception);
 	});
 
-
-
-	server.listen(options.port, options.ip);
-	console.log('Server "'+options.name+'" listening on port '+options.port);
+	this.listen(); // start the server
 }
 util.inherits(exports.Server, events.EventEmitter);
