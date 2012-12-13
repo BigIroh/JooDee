@@ -10,16 +10,18 @@ Client and Session objects.
 JooDee depends on `syntax-error` and `mime`, both of which are packaged inside of `node_modules`.
 
 ##Tags##
+General purpose server-side script tag
 ```
-//general purpose server-side script tag
-<script type="joodee"></script>
-
-//shortcut for Response.write(), writes the evaluated code to the page
-<: must(evaluate) + " to a js string" :>
-
-//includes a .html or .joo file
-<script type="joodee" src="file/to/include.joo"/>
+<:
+    var code = 'goes here';
+:>
 ```
+
+Shortcut for Response.write(), writes the evaluated code to the page.  Must be outside of script tags.
+`<:: must('evaluate') + ' to a js string' :>`
+
+Includes a .html or .joo file
+`<::: file/path/here.joo :>`
 
 ##Special variables##
 The variables `Client` and `Session` are available to you server-side and client-side.  
