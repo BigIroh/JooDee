@@ -1,0 +1,90 @@
+<:
+	if(!Page.initialized) {
+		try{
+			Page.clients = [];
+			var WebSocketServer = require('websocket').server;
+			var http = require('http');
+
+			var httpServer = http.createServer();
+			httpServer.listen(8084);
+
+			Page.wsServer = new WebSocketServer({httpServer: httpServer});
+
+			Page.wsServer.on('request', function(request) {
+
+		   		var connection = request.accept(null, request.origin); 
+				var index = Page.clients.push(connection) - 1;
+		    	console.log(Page.clients.length + " clients connected.");
+				connection.on('message', function(message) {
+					for(i in Page.clients)
+						Page.clients[i].send(
+							JSON.stringify({
+								connection: i,
+								message: message.utf8Data
+							})
+						);
+					delete Page.wsServer;
+				});
+
+			    // user disconnected
+				connection.on('close', function(connection) {
+					Page.clients.splice(index, 1);
+					console.log(index+ ' closed');
+				});
+			});
+			Page.initialized = true;
+		}
+		catch(err) {
+			console.log(err);
+		}
+	}
+:>
+<!DOCTYPE html>
+<html>
+	<title>
+		Chat with JooDee
+	</title>
+	<head>
+		<link rel="stylesheet" type="text/css" href="chatroom-demo.css">
+		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
+	</head>
+	<body>
+		<div id="container">
+			<div id="user_container"></div>
+			<div id="main_column">
+				<div id="chat_container">
+				</div>
+				<textarea id="input_container">Here is some text</textarea>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
+	<script type="application/javascript">
+		$(document).ready(function() {
+	 		var connection = new WebSocket('ws://127.0.0.1:8084');
+	 		console.log(connection);
+	 		connection.onopen = function () {
+				// connection is opened and ready to use
+				$('#input_container').keyup(function(e) {
+					if(e.keyCode == 13) {
+						connection.send( $('#input_container').val() );
+						$('#input_container').val('');
+					}
+				});
+			};
+
+			connection.onerror = function (error) {
+				// an error occurred when sending/receiving data
+			};
+
+			connection.onmessage = function (message) {
+				var obj = JSON.parse(message.data);
+				$('#chat_container').append('<div class="chat_message">'+
+					obj.message.replace(/[ ]/gm, '&nbsp;')
+					.replace(/\\n/gm,'<br>')
+					.replace(/\\t/gm, '&nbsp;&nbsp;&nbsp;&nbsp;') +
+					'</div>');
+			};
+		});
+ 	</script>
+</html>

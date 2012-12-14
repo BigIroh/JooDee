@@ -1,0 +1,55 @@
+html, body {
+	height:100%;
+	padding: 0px;
+	margin: 0px;
+	font: 12px Verdana, Arial, Helvetica, sans-serif;
+}
+
+#main_column{
+	width: 80%;
+	height: 100%;
+}
+
+#container {
+	height: 80%;
+	width: 80%;
+	margin:auto;
+}
+
+#user_container, #main_column {
+	float: right;
+	margin: 0px;
+	padding: 0px;
+}
+
+#user_container {
+	height: 100%;
+	width: 20%;
+	max-width: 200px;
+	background-color: #FFFFFF;
+	border: 1px solid black;
+}
+
+#chat_container {
+	height: 80%;
+	width: 100%;
+	min-width: 250px;
+	background-color: #FFFFFF;
+	border: 1px solid black;
+	border-left: 1px solid black;
+	overflow-y: scroll;
+}
+
+#input_container {
+	height: 20%;
+	width: 100%;
+	min-width: 250px;
+	background-color: #FFFFFF;
+	background-position: bottom right;
+	background-repeat: no-repeat;
+	font: 12px Verdana, Arial, Helvetica, sans-serif;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	border-right: none;
+}

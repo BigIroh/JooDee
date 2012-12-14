@@ -5,7 +5,7 @@ var options = {
 	port: 8083,
 	debug: true,
 	dir: "./socket-demo",
-	defaultPage: "socket-demo.joo",
+	defaultPage: "chatroom-demo.joo",
 };
 
 var jd = new JooDee.Server(options);
