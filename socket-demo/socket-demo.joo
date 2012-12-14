@@ -19,7 +19,7 @@
 				connection.on('message', function(message) {
 					console.log(message.utf8Data);
 					for(i in Page.clients)
-						Page.clients[i].send(message.utf8Data);
+						Page.clients[i].send('>'+message.utf8Data);
 				});
 
 			    // user disconnected
