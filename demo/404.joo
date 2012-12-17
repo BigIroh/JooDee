@@ -9,8 +9,8 @@
     :>
     <head>
         <title>JooDee</title>
-        <link rel="stylesheet" type="text/css" href="iroh.css">
-        <link rel="stylesheet" type="text/css" href="joodee.css">
+        <link rel="stylesheet" type="text/css" href="/iroh.css">
+        <link rel="stylesheet" type="text/css" href="/joodee.css">
     </head>
     <body>
         <div class="content">
