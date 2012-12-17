@@ -1,9 +1,7 @@
 /* TODO
  *	 9. Create a master control program to spawn/stop/restart/monitor the servers.
  *  22. Timeouts.. very important now
- *	24. Add server-wide static variable?
  *	26. pipe output to a different file for each server?
- *  28.	Redirect to 404 pages, emit event on 404
  *  29. Emit event on 500, set 500 event
  * DONE
  *	 1. Create a shortcut for Response.write().  Anything in between <:: and :> will be output
@@ -26,8 +24,10 @@
  *  21. Add Response.end() and have it end and sent the response.
  *  22. ensure server can't crash on error
  *  23. Move debugging to a separate module
+ *	24. Add server-wide static variable?
  *	25.	Have servers start in child processes for graceful resetting
  *  27. we should make a standalone module.. allow for binding events etc.
+ *  28.	Redirect to 404 pages, emit event on 404
  */
 
 
@@ -303,8 +303,7 @@ exports.Server = function (options) {
 			"</script>");
 	}
 
-	var handleJoo = function (req, res, filePath, data) {
-		res.setHeader("Content-Type", "text/html; charset=utf8");
+	var handleJoo = function (req, res, filePath, data, is404) {
 		//if this page doesnt have a static variable created for it yet, create one now
 		if(typeof pageObjects[filePath] == "undefined") {
 			pageObjects[filePath] = {};
@@ -363,9 +362,18 @@ exports.Server = function (options) {
 			var check = require('syntax-error');
 			var syntaxError = check(scriptString, "");
 
+			console.log(filePath);
+
 			/*Create a JooDee to serve the page.*/
 			var html = '';
 			var Client = {};
+			if(is404){
+				Client.filePath = filePath.substring(0, filePath.lastIndexOf('/'));
+				Client.fileName = filePath.substring(filePath.lastIndexOf('/')+1);
+			}
+
+			console.log(Client.filePath);
+			console.log(Client.fileName);
 
 			//Create Response object that JooDee will use to build the html
 			var Response = {
@@ -380,13 +388,15 @@ exports.Server = function (options) {
 					html = insertClient(html, Client);
 					//Append the Session variable to the header
 					res.setHeader("Set-Cookie", appendSessionVariable(res, Session));
+					if(is404) {
+						res.writeHead(404);
+					}
 					//write the page
 					res.write(html);
 					res.end();
 				},
 				scriptString: scriptString //This is the generated js that JooDee will eval. It is passed in with the Response so delete can be called, cleaning the namespace
 			};
-
 			var outputErrorMessage = function (err, additionalMessage) {
 				err.line-=1;
 				Response.write("<div style='background-color: #DDDDDD; border: 1px solid black; font: 12px Arial;'>");
@@ -409,7 +419,6 @@ exports.Server = function (options) {
 				}
 				Response.write("<br>"+additionalMessage+"</div>");
 			}
-
 			if(syntaxError) {
 				outputErrorMessage(syntaxError, 'Syntax Error');
 				serverInstance.emit('syntaxError', syntaxError);
@@ -419,6 +428,7 @@ exports.Server = function (options) {
 				var debugFilename = filePath.split('.joo')[0] + "_debug.js";
 				JooDebugger.call({},  GET, POST, Session, Client, serverInstance.Server, pageObjects[filePath], Response, debugFilename, function(runtimeError) {
 					if(runtimeError) {
+						console.log(runtimeError);
 						outputErrorMessage(runtimeError, 'Runtime Error');
 						serverInstance.emit('runtimeError', runtimeError);
 						Response.end();
@@ -429,9 +439,7 @@ exports.Server = function (options) {
 				//prevent shit like this = {} from killing everyone
 				JooDee.call({},  GET, POST, Session, Client, serverInstance.Server, pageObjects[filePath], Response);	
 			}
-			
-		});//end of FileDescriptor call
-		
+		});
 	};
 
 	var requestListener = function (req, res) {
@@ -458,16 +466,21 @@ exports.Server = function (options) {
 			console.log(e.stack);
 		}
 		var filePath = process.cwd()+path;
+		var errorPath = process.cwd()+'/'+options.error404;
 		var ext = path.substring(path.lastIndexOf('.')+1);
-		fs.readFile(filePath, function (err, data) {  
+		fs.readFile(filePath, function (err, data) {
 			if (err) {
-				res.writeHead(404, {'Content-Type': 'text/html'});
-				res.end('File not found.');
+				console.log('404 at ' + filePath);
+				serverInstance.emit('404', filePath);
+				res.setHeader('Content-Type', 'text/html; charset=utf8');
+				fs.readFile(errorPath, function (err, data) {
+					handleJoo(req, res, filePath, data, true);
+				});
 			} 
 			else if (ext == 'joo') {
+				res.setHeader("Content-Type", "text/html; charset=utf8");
 				handleJoo(req, res, filePath, data);
-			}//end of .joo extension branch
-			//process non .joo files
+			}
 			else {
 				var type = require('mime').lookup(filePath);
 				res.writeHead(200, {'Content-Type' :type + (type=='text/html' ?  'charset=utf8' : '')});
