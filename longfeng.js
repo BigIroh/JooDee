@@ -3,7 +3,7 @@ var fs = require('fs');
 var fork = require('child_process').fork;
 
 var actions = new Array();
-//Ends the LongFeng instance and all the JooDees it is handling
+//Help command similar to '?' in unix
 actions['?'] = function(params) {
 	switch(params) {
 		case 'close':
@@ -51,33 +51,38 @@ actions['exit'] = function(params) {
 };
 
 //Close servers from receiveing connections with the given names
-actions['close'] =  function(params) {
+actions['close'] = function(params) {
 	var names = params.split(' ');
+	var touched = false;
 	for (n in names) {
 		var name = names[n];
 		if(servers[name]) {
 			var name = names[n];
 			servers[name].send('close');
+			touched = true;
 		}
 	}
+	if(!touched) console.log('No servers affected')
 };
 
 //Allow connections to servers with the given names
-actions['listen'] =  function(params) {
+actions['listen'] = function(params) {
 	var names = params.split(' ');
+	var touched = false;
 	for (n in names) {
 		var name = names[n];
 		if(servers[name]) {
 			var name = names[n];
 			servers[name].send('listen');
+			touched = true;
 		}
 	}
 };
 
 //Close the given servers and remove them from memory
-actions['kill'] =  function(params) {
+actions['kill'] = function(params) {
 	var names = params.split(' ');
-	actions['close'](params);
+	var touched = false;
 	for (n in names) {
 		var name = names[n];
 		if(servers[name]) {
@@ -85,14 +90,17 @@ actions['kill'] =  function(params) {
 			servers[name].kill();
 			console.log('Server "'+name+'" killed');
 			servers[name] = null;
+			touched = true;
 		}
 	}
+	if(!touched) console.log('No servers affected')
 };
 
 //Load and start given servers listed in the config file
 //This does not work on the LongFeng JooDee
-actions['load'] =  function(params) {
+actions['load'] = function(params) {
 	var names = params.split(' ');
+	var touched = false;
 	fs.readFile('./config.json', 'utf8', function(err, data) {
 		if(err){
 			console.log(err);
@@ -108,10 +116,12 @@ actions['load'] =  function(params) {
 					var child = fork('./daili');
 					child.send({options: config[i]});
 					servers[config[i].name] = child;
+					touched = true;
 				}
 			}
 		}
 	});
+	if(!touched) console.log('No servers affected')
 };
 
 //Kill then load and spawn the given servers listed in the config file
@@ -133,10 +143,15 @@ actions['status'] = function(params) {
 		}
 	}
 	else {
+		var touched = false;
 		for(s in servers) {
 			var server = servers[s];
-			if (server) server.send('status');
+			if (server) {
+				server.send('status');
+				touched = true;
+			}
 		}
+		if(!touched) console.log('No servers affected')
 	}
 }
 
