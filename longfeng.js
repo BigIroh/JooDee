@@ -1,6 +1,6 @@
 var joodee = require('./joodee');
 var fs = require('fs');
-
+var fork = require('child_process').fork;
 
 var actions = new Array();
 //Ends the LongFeng instance and all the JooDees it is handling
@@ -57,7 +57,7 @@ actions['close'] =  function(params) {
 		var name = names[n];
 		if(servers[name]) {
 			var name = names[n];
-			servers[name].close();
+			servers[name].send('close');
 		}
 	}
 };
@@ -69,7 +69,7 @@ actions['listen'] =  function(params) {
 		var name = names[n];
 		if(servers[name]) {
 			var name = names[n];
-			servers[name].listen();
+			servers[name].send('listen');
 		}
 	}
 };
@@ -83,6 +83,7 @@ actions['kill'] =  function(params) {
 		if(servers[name]) {
 			var name = names[n];
 			servers[name].kill();
+			console.log('Server "'+name+'" killed');
 			servers[name] = null;
 		}
 	}
@@ -104,7 +105,9 @@ actions['load'] =  function(params) {
 				if(servers[name]) {
 					console.log('There is already a server named "'+name+'"');
 				} else {
-					servers[name] = new joodee.Server(config[i]);
+					var child = fork('./daili');
+					child.send({options: config[i]});
+					servers[config[i].name] = child;
 				}
 			}
 		}
@@ -125,14 +128,14 @@ actions['status'] = function(params) {
 			var name = names[n];
 			if(servers[name]) {
 				var name = names[n];
-				servers[name].status();
+				servers[name].send('status');
 			}
 		}
 	}
 	else {
 		for(s in servers) {
 			var server = servers[s];
-			if (server) server.status();
+			if (server) server.send('status');
 		}
 	}
 }
@@ -150,7 +153,10 @@ fs.readFile('./config.json', 'utf8', function(err, data) {
 		if(servers[config[i].name]) {
 			console.log('There is already a server named "'+config[i].name+'"');
 		} else {
-			servers[config[i].name] = new joodee.Server(config[i]);
+			//servers[config[i].name] = new joodee.Server(config[i]);
+			var child = fork('./daili');
+			child.send({options: config[i]});
+			servers[config[i].name] = child;
 		}
 	}
 });

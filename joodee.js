@@ -362,18 +362,13 @@ exports.Server = function (options) {
 			var check = require('syntax-error');
 			var syntaxError = check(scriptString, "");
 
-			console.log(filePath);
-
 			/*Create a JooDee to serve the page.*/
 			var html = '';
 			var Client = {};
 			if(is404){
-				Client.filePath = filePath.substring(0, filePath.lastIndexOf('/'));
+				Client.filePath = filePath.substring(0, filePath.lastIndexOf('/')+1);
 				Client.fileName = filePath.substring(filePath.lastIndexOf('/')+1);
 			}
-
-			console.log(Client.filePath);
-			console.log(Client.fileName);
 
 			//Create Response object that JooDee will use to build the html
 			var Response = {
@@ -474,7 +469,7 @@ exports.Server = function (options) {
 				serverInstance.emit('404', filePath);
 				res.setHeader('Content-Type', 'text/html; charset=utf8');
 				fs.readFile(errorPath, function (err, data) {
-					handleJoo(req, res, filePath, data, true);
+					handleJoo(req, res, path, data, true);
 				});
 			} 
 			else if (ext == 'joo') {
@@ -490,8 +485,8 @@ exports.Server = function (options) {
 	};
 
 	var uncaughtException = function(err) {
-		serverInstance.emit('uncaughtException', err);
 		console.log("Uncaught exception: ",err.stack);
+		serverInstance.emit('uncaughtException', err);
 	};
 
 	// forward any uncaught exceptions as events
