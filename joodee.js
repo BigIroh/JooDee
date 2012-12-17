@@ -3,6 +3,8 @@
  *  22. Timeouts.. very important now
  *	26. pipe output to a different file for each server?
  *  29. Emit event on 500, set 500 event
+ *  30. Add gzip capabilities and caching for non .joo files. Possibly add on the fly gzip for .joo files but this may be too expensive
+ *  30. Path sanitation and limiting to only children of dir
  * DONE
  *	 1. Create a shortcut for Response.write().  Anything in between <:: and :> will be output
  *	 2. The parser should escape strings when searching for a closing :> tag
@@ -419,7 +421,7 @@ exports.Server = function (options) {
 				serverInstance.emit('syntaxError', syntaxError);
 				Response.end();
 			}
-			else if(options.debug) {
+			else if(options.debug && !is404) {
 				var debugFilename = filePath.split('.joo')[0] + "_debug.js";
 				JooDebugger.call({},  GET, POST, Session, Client, serverInstance.Server, pageObjects[filePath], Response, debugFilename, function(runtimeError) {
 					if(runtimeError) {
