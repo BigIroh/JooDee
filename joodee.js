@@ -4,7 +4,6 @@
  *	26. pipe output to a different file for each server?
  *  29. Emit event on 500, set 500 event
  *  30. Add gzip capabilities and caching for non .joo files. Possibly add on the fly gzip for .joo files but this may be too expensive
- *  30. Path sanitation and limiting to only children of dir
  * DONE
  *	 1. Create a shortcut for Response.write().  Anything in between <:: and :> will be output
  *	 2. The parser should escape strings when searching for a closing :> tag
@@ -30,6 +29,7 @@
  *	25.	Have servers start in child processes for graceful resetting
  *  27. we should make a standalone module.. allow for binding events etc.
  *  28.	Redirect to 404 pages, emit event on 404
+ *  31. Path sanitation and limiting to only children of dir
  */
 
 
@@ -266,6 +266,7 @@ exports.Server = function (options) {
 	var url = require('url');
 	var http = require('http');
 	var https = require('https');	
+	var pathLib = require('path');	
 	var qs = require('querystring');
 	var nodeDir = "";		//directory that the server is running in
 	var firstTime = true; //ensures relative pathing for 'dir' only happens 1x
@@ -462,11 +463,11 @@ exports.Server = function (options) {
 			console.log("Current directory is " + process.cwd() + ".");
 			console.log(e.stack);
 		}
-		var filePath = process.cwd()+path;
-		var errorPath = process.cwd()+'/'+options.error404;
+		var filePath = pathLib.join(process.cwd(),path);
+		var errorPath = pathLib.join(process.cwd(), options.error404);
 		var ext = path.substring(path.lastIndexOf('.')+1);
 		fs.readFile(filePath, function (err, data) {
-			if (err) {
+			if (err || filePath.indexOf(process.cwd())<0) {
 				console.log('404 at ' + filePath);
 				serverInstance.emit('404', filePath);
 				res.setHeader('Content-Type', 'text/html; charset=utf8');
