@@ -12,19 +12,19 @@ JooDee depends on `syntax-error` and `mime`, both of which are packaged inside o
 ##Tags##
 General purpose server-side script tag
 ```
-<:
-    var code = 'goes here';
-:>
+    <:
+        var code = 'goes here';
+    :>
 ```
 
 Shortcut for Response.write(), writes the evaluated code to the page.  Must be outside of script tags.
 ```
-<:: must('evaluate') + ' to a js string' :>
+    <:: must('evaluate') + ' to a js string' :>
 ```
 
 Includes a .html or .joo file
 ```
-<::: file/path/here.joo :>
+    <::: file/path/here.joo :>
 ```
 
 ##Special variables##
@@ -92,16 +92,20 @@ It gives a console interface for controlling all of the JooDee instances.
     
     Type a "?" and a command to learn more about it.
 ```
+Since `joodee.js` is only a module, `longfeng.js` is currently the easiest way to deploy and use your sites. To use `longfeng.js` just add your project's options object to the `config.json` file and run
+```
+    node longfeng.js
+```
 
 ##Demo##
 ```
-node demo.js
+    node demo.js
 ```
 navigate to `127.0.0.1:8081` in your browser.
 
 ##Async Demo##
 This demonstrates one way of how to build a page when async calls are involved. <br>
 ```
-node async-demo.js
+    node async-demo.js
 ```
 navigate to `127.0.0.1:8082` in your browser.
