@@ -1,6 +1,6 @@
 var joodee = require('./joodee');
- var server;
- process.on('message', function(message) {  
+var server;
+process.on('message', function(message) {  
     if(message.options){
         server = new joodee.Server(message.options);
     }
