@@ -1,5 +1,4 @@
 /* TODO
- *	 9. Create a master control program to spawn/stop/restart/monitor the servers.
  *  22. Timeouts.. very important now
  *	26. pipe output to a different file for each server?
  *  29. Emit event on 500, set 500 event
@@ -12,6 +11,7 @@
  *	 6. Figure out a good way to handle session variables
  *	 7. HTTPS support
  *	 8. HTTP Status Codes
+ *	 9. Create a master control program to spawn/stop/restart/monitor the servers.
  *	10.	Make the constructor for the server take different params (port, http/https, ip, root directory)
  *	11. Read from a config file to set params for this server
  *  12. Add ability too include other files, like .html and .joo
