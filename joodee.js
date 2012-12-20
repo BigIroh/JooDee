@@ -23,7 +23,8 @@
  *	26. pipe output to a different file for each server?
  *  29. Emit event on 500, set 500 event
  *  30. Add gzip capabilities and caching for non .joo files. Possibly add on the fly gzip for .joo files but this may be too expensive
- *  31. Add variables in JooDee that give access to things like url and handler defined variables
+ *  32. Add variables in JooDee that give access to things like url and handler defined variables
+ *  33. Actually use session length
  * 
  * DONE
  *	 1. Create a shortcut for Response.write().  Anything in between <:: and :> will be output
