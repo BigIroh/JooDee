@@ -1,5 +1,5 @@
 [
-	{
+    {
 		"name": "JooDee",
 		"dir": "./demo/",
 		"port": 8080,

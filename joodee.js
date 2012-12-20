@@ -3,6 +3,8 @@
  *	26. pipe output to a different file for each server?
  *  29. Emit event on 500, set 500 event
  *  30. Add gzip capabilities and caching for non .joo files. Possibly add on the fly gzip for .joo files but this may be too expensive
+ *  31. Add variables in JooDee that give access to things like url and handler defined variables
+ * 
  * DONE
  *	 1. Create a shortcut for Response.write().  Anything in between <:: and :> will be output
  *	 2. The parser should escape strings when searching for a closing :> tag
@@ -69,7 +71,6 @@ var JooDebugger = function(GET, POST, Session, Client, Server, Page, Response, d
 		}
 	});
 }
-
 
 var events = require('events');
 var util = require('util');

@@ -1,6 +1,25 @@
-var joodee = require('./joodee');
 var fs = require('fs');
+var joodee = require('./joodee');
 var fork = require('child_process').fork;
+
+var servers = [];
+
+var logPath = './log.txt';
+var logStream = fs.openSync(logPath,'a');
+console.log = function(data) {
+	process.stdout.write(data + '\n');
+	var s = (new Date()).toUTCString() + ': ' + data + '\n';
+	fs.write(logStream, s, 0, s.length, null);
+}
+
+var spawn = function(config) {
+	var child = fork('./daili');
+	child.send({
+		options: config,
+		log: './log.txt'
+	});
+	servers[config.name] = child;
+};
 
 var actions = new Array();
 //Help command similar to '?' in unix
@@ -42,7 +61,6 @@ actions['?'] = function(params) {
 			console.log('Type a "?" and a command to learn more about it.');
 	}
 };
-
 
 //Ends the LongFeng instance and all the JooDees it is handling
 actions['exit'] = function(params) {
@@ -93,7 +111,9 @@ actions['kill'] = function(params) {
 			touched = true;
 		}
 	}
-	if(!touched) console.log('No servers affected')
+	if(!touched) {
+		console.log('No servers affected');
+	}
 };
 
 //Load and start given servers listed in the config file
@@ -104,6 +124,7 @@ actions['load'] = function(params) {
 	fs.readFile('./config.json', 'utf8', function(err, data) {
 		if(err){
 			console.log(err);
+			console.log('No servers affected');
 			return;
 		}
 		var config = JSON.parse(data);
@@ -113,15 +134,15 @@ actions['load'] = function(params) {
 				if(servers[name]) {
 					console.log('There is already a server named "'+name+'"');
 				} else {
-					var child = fork('./daili');
-					child.send({options: config[i]});
-					servers[config[i].name] = child;
+					spawn(config[i]);
 					touched = true;
 				}
 			}
 		}
+		if(!touched) {
+			console.log('No servers affected');
+		}
 	});
-	if(!touched) console.log('No servers affected')
 };
 
 //Kill then load and spawn the given servers listed in the config file
@@ -131,6 +152,7 @@ actions['reload'] = function(params) {
 	actions['load'](params);
 };
 
+//Outputs the server's status to the console
 actions['status'] = function(params) {
 	if(params) {
 		var names = params.split(' ');
@@ -139,6 +161,9 @@ actions['status'] = function(params) {
 			if(servers[name]) {
 				var name = names[n];
 				servers[name].send('status');
+			}
+			else {
+				console.log('Server "'+name+'" does not exist. Maybe you killed it')
 			}
 		}
 	}
@@ -155,8 +180,6 @@ actions['status'] = function(params) {
 	}
 }
 
-var servers = [];
-
 //Read in the config file and spawn servers
 fs.readFile('./config.json', 'utf8', function(err, data) {
 	if(err){
@@ -168,10 +191,7 @@ fs.readFile('./config.json', 'utf8', function(err, data) {
 		if(servers[config[i].name]) {
 			console.log('There is already a server named "'+config[i].name+'"');
 		} else {
-			//servers[config[i].name] = new joodee.Server(config[i]);
-			var child = fork('./daili');
-			child.send({options: config[i]});
-			servers[config[i].name] = child;
+			spawn(config[i]);
 		}
 	}
 });
