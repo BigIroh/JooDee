@@ -20,8 +20,6 @@
 
 /* TODO
  *  22. Timeouts.. very important now
- *	26. pipe output to a different file for each server?
- *  29. Emit event on 500, set 500 event
  *  30. Add gzip capabilities and caching for non .joo files. Possibly add on the fly gzip for .joo files but this may be too expensive
  *  32. Add variables in JooDee that give access to things like url and handler defined variables
  *  33. Actually use session length
@@ -50,8 +48,10 @@
  *  23. Move debugging to a separate module
  *	24. Add server-wide static variable?
  *	25.	Have servers start in child processes for graceful resetting
+ *	26. pipe output to a different file for each server? (Not happening and not part of JooDee anyway)
  *  27. we should make a standalone module.. allow for binding events etc.
  *  28.	Redirect to 404 pages, emit event on 404
+ *  29. Emit event on 500, set 500 event
  *  31. Path sanitation and limiting to only children of dir
  */
 
@@ -125,7 +125,7 @@ exports.Server = function (options) {
 	var https = require('https');	
 	var pathLib = require('path');	
 	var qs = require('querystring');
-	var nodeDir = "";		//directory that the server is running in
+	var nodeDir = process.cwd();		//directory that the server is running in
 	var firstTime = true; //ensures relative pathing for 'dir' only happens 1x
 	var defaults = {
 		name: null,
@@ -142,6 +142,25 @@ exports.Server = function (options) {
 		key: null,
 		certificate: null
 	}
+	
+	//copy default into options if no option is set
+	if(!options) {
+		options = {};
+	}
+	for(d in defaults) {
+		if(options[d] === undefined) {
+			options[d] = defaults[d];
+		}
+	}
+	if(options.dir.charAt(options.dir.length-1) != '/') {
+		options.dir = options.dir + '/';
+	}
+
+	process.chdir(options.dir);
+
+	var data500 = fs.readFileSync(options.error500);
+	var data404 = fs.readFileSync(options.error404);
+
 
 	var parse = function(data) {
 		var responseEndFound = false;
@@ -310,7 +329,7 @@ exports.Server = function (options) {
 		this.getText = getText;
 	}
 
-	var handleJoo = function (req, res, filePath, data, is404) {
+	var handleJoo = function (req, res, filePath, data, is404, is500) {
 		/* create session variable and append it to the header
 		 * converts 'set-cookie' into an array if it is undefined or a string so that 'push' works later
 		 * this has the effect of adding on to set-cookie as opposed to overwriting it */
@@ -388,7 +407,6 @@ exports.Server = function (options) {
 			var scriptString = parse(text);
 			var check = require('syntax-error');
 			var syntaxError = check(scriptString, "");
-
 			/*Create a JooDee to serve the page.*/
 			var html = '';
 			var Client = {};
@@ -396,6 +414,7 @@ exports.Server = function (options) {
 				Client.filePath = filePath.substring(0, filePath.lastIndexOf('/')+1);
 				Client.fileName = filePath.substring(filePath.lastIndexOf('/')+1);
 			}
+			
 
 			//Create Response object that JooDee will use to build the html
 			var Response = {
@@ -413,12 +432,16 @@ exports.Server = function (options) {
 					if(is404) {
 						res.writeHead(404);
 					}
+					else if(syntaxError) {
+						res.writeHead(500);
+					}
 					//write the page
 					res.write(html);
 					res.end();
 				},
 				scriptString: scriptString //This is the generated js that JooDee will eval. It is passed in with the Response so delete can be called, cleaning the namespace
 			};
+
 			var outputErrorMessage = function (err, additionalMessage) {
 				err.line-=1;
 				Response.write("<div style='background-color: #DDDDDD; border: 1px solid black; font: 12px Arial;'>");
@@ -443,10 +466,10 @@ exports.Server = function (options) {
 			}
 			if(syntaxError) {
 				outputErrorMessage(syntaxError, 'Syntax Error');
-				serverInstance.emit('syntaxError', syntaxError);
-				Response.end();
+				serverInstance.emit('500', filePath);
+				Response.scriptString = parse(data500+'');
 			}
-			else if(options.debug && !is404) {
+			if(options.debug && !is404) {
 				var debugFilename = filePath.split('.joo')[0] + "_debug.js";
 				JooDebugger.call({},  GET, POST, Session, Client, serverInstance.Server, pageObjects[filePath], Response, debugFilename, function(runtimeError) {
 					if(runtimeError) {
@@ -475,29 +498,19 @@ exports.Server = function (options) {
 		if (path[path.length-1] == '/') {
 			path = path + options.defaultPage;
 		}
-		try {
-			if(firstTime) {
-				nodeDir = process.cwd();
-				process.chdir(options.dir);
-				firstTime = false;
-			}
-		}
-		catch(e) {
-			console.log("Error changing directory to " + options.dir + ".");
-			console.log("Current directory is " + process.cwd() + ".");
-			console.log(e.stack);
-		}
 		var filePath = pathLib.join(process.cwd(),path);
-		var errorPath = pathLib.join(process.cwd(), options.error404);
 		var ext = path.substring(path.lastIndexOf('.')+1);
 		fs.readFile(filePath, function (err, data) {
 			if (err || filePath.indexOf(process.cwd())<0) {
 				console.log('404 at ' + filePath);
 				serverInstance.emit('404', filePath);
 				res.setHeader('Content-Type', 'text/html; charset=utf8');
-				fs.readFile(errorPath, function (err, data) {
-					handleJoo(req, res, path, data, true);
-				});
+				if(data404) {
+					handleJoo(req, res, path, data404, true);
+				}
+				else {
+					handleJoo(req, res, path, data404, true);
+				}
 			} 
 			else if (ext == 'joo') {
 				res.setHeader("Content-Type", "text/html; charset=utf8");
@@ -517,20 +530,7 @@ exports.Server = function (options) {
 	};
 
 	// forward any uncaught exceptions as events
-	process.on('uncaughtException', uncaughtException);
-
-	//copy default into options if no option is set
-	if(!options) {
-		options = {};
-	}
-	for(d in defaults) {
-		if(options[d] === undefined) {
-			options[d] = defaults[d];
-		}
-	}
-	if(options.dir.charAt(options.dir.length-1) != '/') {
-		options.dir = options.dir + '/';
-	}
+	//process.on('uncaughtException', uncaughtException);
 
 	//Create the server
 	var server;
