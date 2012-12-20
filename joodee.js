@@ -87,176 +87,11 @@ var util = require('util');
  * ]
  *
  * When the filedescriptor is done parsing files, the callback is executed. */
-var FileDescriptor = function (filename, data, callback) { 	
-	//construct the object
- 	var fileDescriptorInstance = this;
-	var lines = data.split('\n');
-	var descriptor = [];
-	var includes = {};
-	includes[filename] = data+'';
-
-	//contains all the information needed for a single line of code
-	var LineDescriptor = function (filename, text, line) {
-		this.file = filename;
-		this.text = text;
-		this.line = line;
-	};
-
-	for(line in lines) {
-		descriptor.push( new LineDescriptor(filename, lines[line], Number(line)+1) );
-	}
-
-	//returns plaintext of entire descriptor for eval'ing
-	var getText = function() {
-		return descriptor.map( function(lineDescriptor) {
-			return lineDescriptor.text;
-		}).join('\n');
-	};
-
-	//adds the plain string 'content' to the descriptor, starting at 'line' in the descriptor.
-	//content will be split by \n and converted into linedescriptors, then spliced in.
-	var addContent = function(filename, content, line) {
-		var relativeLine = 1;
-		var includeDescriptor = content.split('\n').map( function(text) {
-			return new LineDescriptor(filename, text, relativeLine++);
-		});
-		var args = [line+1, 0].concat(includeDescriptor);
-		Array.prototype.splice.apply(descriptor, args);
-	}
-
-	//replaces all instances of reInclude regex with the file's contents, or emits
-	//the event 'ready' if there are no more to replace.  This will call itself recursively
-	//until there are no more to replace
-	function replaceIncludes() {
-		//finds things in the form of <script type='joodee' src='blah'/> or <script src="blah" type="blah"/>
-		var reInclude = /<:::(.*?):>/gmi;
-		var includeList = [];	//keeps track of all files that need to be included in this iteration
-		for(var i=0; i<descriptor.length; i++) {
-			var result = reInclude.exec(descriptor[i].text);
-			//when an include is found, the line it was found on is split so that the include tag
-			//will be at the start of the NEXT line.  The list of includes is updated with a new
-			//entry containing the path and line number for the include.  The file itself is not
-			//loaded yet.
-			if(result) {
-				var includePath = result[1];
-				includeList.push({path: includePath, line: i});
-
-				//split the current line on to a new line
-				var extraText = descriptor[i].text.substring(result.index + result[0].length);
-				descriptor[i].text = descriptor[i].text.substring(0, result.index);
-				descriptor.splice(i, 0, 
-					new LineDescriptor(descriptor[i].file, extraText, descriptor[i].line));
-			}
-
-		}
-
-		//base case for recursion
-		if(includeList.length == 0) {
-			callback(getText(), descriptor, includes);
-			return;
-		}
-
-		//once the entire file has been examined for include tags, load all of the includes from the disk
-		var fs = require('fs');
-		var loadedCount = 0;
-		for(var i=0; i<includeList.length; i++) {
-
-			//only load each include 1x, and store the contents into the map 'includes,' which maps
-			//the include's path to the the file's contents.  includes[path] is set to 'true' just 
-			//before 'readFile' is called to prevent it from being included multiple times before
-			//it got the chance to finish loading the first time.  The callback is called even if
-			//the file has already been loaded, to ensure that it is called the correct number of 
-			//times (if it isn't called once per file in 'includeList,' the program will not progress).
-			var path = includeList[i].path;
-			if(!includes[path]) {
-				includes[path] = true;
-				fs.readFile(path, 'utf8', function(err, data) {
-					includesLoadedCallback(err, data, path);
-				});
-			}
-			else {
-				includesLoadedCallback();
-			}
-		}
-
-		//this callback waits until all files at the current level have loaded
-		function includesLoadedCallback(err, data, path) {
-
-			loadedCount++;
-			if(err) {
-				//emit an error event here
-				//do something to let the user know it happened
-				console.log("error loading include file @" + path);
-			}
-			else if(data) {
-				includes[path] = data + '';
-			}
-
-			if(loadedCount == includeList.length) {
-				//now, insert the contents of the includes into the filedescriptor
-				for(var i in includeList) {
-					var path = includeList[i].path;
-					var content = includes[path];
-					var line = includeList[i].line;
-					addContent(path, content, line);
-				}
-
-				//recursively call this until no more includes are found
-				replaceIncludes();
-			}
-		}
-	};
-
-	replaceIncludes();
-
-	this.descriptor = descriptor;
-	this.getText = getText;
-}
 
 /* Given the raw text of the file we're serving, build the script that will be
  * eval'd later in the program.  Escape all fancy characters (new lines, etc).
  * Appends Response.end() at the bottom of the script if it was not encountered
  * during the parsing. */
-var parse = function(data) {
-	var responseEndFound = false;
-	var reScript = /<::?([\s\S]*?):>/gm;
-	var scriptString = 'delete Response.scriptString;';
-
-	var start = 0;
-	while((result = reScript.exec(data)) !== null) {
-		//get all html before this scripttag pair
-		scriptString += 'Response.write("'+
-			data.substring(start, result.index)
-				.replace(/\"/gm,'\\"')
-				.replace(/\r/gm,"")
-				.replace(/\n/gm,"\\n\\\n")
-				.replace("/\\/gm","\\\\") +
-				'");';
-
-		//output tag
-		if(result[0].charAt(2)==':') {
-			scriptString += 'Response.write(' + result[1] + ');';
-		}
-		else {
-			scriptString += result[1];	//actual code to be executed
-			if(result[1].indexOf("Response.end()") >= 0) {
-				responseEndFound = true;
-			}
-		}
-		start = result.index + result[0].length;
-	}
-	//get all html left over
-	scriptString += 'Response.write("'+
-		data.substring(start, data.length)
-			.replace(/\"/gm,'\\"')
-			.replace(/\r/gm,"")
-			.replace(/\n/gm,"\\n\\\n")
-			.replace("/\\/gm","\\\\") +
-			'");';
-
-	if(!responseEndFound) scriptString += "Response.end();";
-	return scriptString;
-};
 
 exports.Server = function (options) {
 	var pageObjects = {};
@@ -287,27 +122,194 @@ exports.Server = function (options) {
 		certificate: null
 	}
 
-	/* create session variable and append it to the header
-	 * converts 'set-cookie' into an array if it is undefined or a string so that 'push' works later
-	 * this has the effect of adding on to set-cookie as opposed to overwriting it */
-	var appendSessionVariable = function (res, Session) {
-		var setCookieHeader = res.getHeader("Set-Cookie");
-		if(typeof setCookieHeader != "object") {
-			setCookieHeader = (setCookieHeader ? [setCookieHeader] : []);
-		}
-		setCookieHeader.push("session=" + JSON.stringify(Session));	//When we have more than one server running, this name might have to change
-		return setCookieHeader;
-	}
+	var parse = function(data) {
+		var responseEndFound = false;
+		var reScript = /<::?([\s\S]*?):>/gm;
+		var scriptString = 'delete Response.scriptString;';
 
-	/* Inserts a JSON version of the server's 'Client' object at the open HTML tag in the file. */
-	var insertClient = function(html, Client) {
-		return html.replace("<html>", 
-			"<html>\n<script type='application/javascript'>\n"
-			+"var Client = "+JSON.stringify(Client)+";\n"+
-			"</script>");
+		var start = 0;
+		while((result = reScript.exec(data)) !== null) {
+			//get all html before this scripttag pair
+			scriptString += 'Response.write("'+
+				data.substring(start, result.index)
+					.replace(/\"/gm,'\\"')
+					.replace(/\r/gm,"")
+					.replace(/\n/gm,"\\n\\\n")
+					.replace("/\\/gm","\\\\") +
+					'");';
+
+			//output tag
+			if(result[0].charAt(2)==':') {
+				scriptString += 'Response.write(' + result[1] + ');';
+			}
+			else {
+				scriptString += result[1];	//actual code to be executed
+				if(result[1].indexOf("Response.end()") >= 0) {
+					responseEndFound = true;
+				}
+			}
+			start = result.index + result[0].length;
+		}
+		//get all html left over
+		scriptString += 'Response.write("'+
+			data.substring(start, data.length)
+				.replace(/\"/gm,'\\"')
+				.replace(/\r/gm,"")
+				.replace(/\n/gm,"\\n\\\n")
+				.replace("/\\/gm","\\\\") +
+				'");';
+
+		if(!responseEndFound) scriptString += "Response.end();";
+		return scriptString;
+	};
+
+	var FileDescriptor = function (filename, data, callback) { 	
+		//construct the object
+	 	var fileDescriptorInstance = this;
+		var lines = data.split('\n');
+		var descriptor = [];
+		var includes = {};
+		includes[filename] = data+'';
+
+		//contains all the information needed for a single line of code
+		var LineDescriptor = function (filename, text, line) {
+			this.file = filename;
+			this.text = text;
+			this.line = line;
+		};
+
+		for(line in lines) {
+			descriptor.push( new LineDescriptor(filename, lines[line], Number(line)+1) );
+		}
+
+		//returns plaintext of entire descriptor for eval'ing
+		var getText = function() {
+			return descriptor.map( function(lineDescriptor) {
+				return lineDescriptor.text;
+			}).join('\n');
+		};
+
+		//adds the plain string 'content' to the descriptor, starting at 'line' in the descriptor.
+		//content will be split by \n and converted into linedescriptors, then spliced in.
+		var addContent = function(filename, content, line) {
+			var relativeLine = 1;
+			var includeDescriptor = content.split('\n').map( function(text) {
+				return new LineDescriptor(filename, text, relativeLine++);
+			});
+			var args = [line+1, 0].concat(includeDescriptor);
+			Array.prototype.splice.apply(descriptor, args);
+		}
+
+		//replaces all instances of reInclude regex with the file's contents, or emits
+		//the event 'ready' if there are no more to replace.  This will call itself recursively
+		//until there are no more to replace
+		function replaceIncludes() {
+			//finds things in the form of <script type='joodee' src='blah'/> or <script src="blah" type="blah"/>
+			var reInclude = /<:::(.*?):>/gmi;
+			var includeList = [];	//keeps track of all files that need to be included in this iteration
+			for(var i=0; i<descriptor.length; i++) {
+				var result = reInclude.exec(descriptor[i].text);
+				//when an include is found, the line it was found on is split so that the include tag
+				//will be at the start of the NEXT line.  The list of includes is updated with a new
+				//entry containing the path and line number for the include.  The file itself is not
+				//loaded yet.
+				if(result) {
+					var includePath = result[1];
+					includeList.push({path: includePath, line: i});
+
+					//split the current line on to a new line
+					var extraText = descriptor[i].text.substring(result.index + result[0].length);
+					descriptor[i].text = descriptor[i].text.substring(0, result.index);
+					descriptor.splice(i, 0, 
+						new LineDescriptor(descriptor[i].file, extraText, descriptor[i].line));
+				}
+
+			}
+
+			//base case for recursion
+			if(includeList.length == 0) {
+				callback(getText(), descriptor, includes);
+				return;
+			}
+
+			//once the entire file has been examined for include tags, load all of the includes from the disk
+			var fs = require('fs');
+			var loadedCount = 0;
+			for(var i=0; i<includeList.length; i++) {
+
+				//only load each include 1x, and store the contents into the map 'includes,' which maps
+				//the include's path to the the file's contents.  includes[path] is set to 'true' just 
+				//before 'readFile' is called to prevent it from being included multiple times before
+				//it got the chance to finish loading the first time.  The callback is called even if
+				//the file has already been loaded, to ensure that it is called the correct number of 
+				//times (if it isn't called once per file in 'includeList,' the program will not progress).
+				var path = includeList[i].path;
+				if(!includes[path]) {
+					includes[path] = true;
+					fs.readFile(path, 'utf8', function(err, data) {
+						includesLoadedCallback(err, data, path);
+					});
+				}
+				else {
+					includesLoadedCallback();
+				}
+			}
+
+			//this callback waits until all files at the current level have loaded
+			function includesLoadedCallback(err, data, path) {
+
+				loadedCount++;
+				if(err) {
+					//emit an error event here
+					//do something to let the user know it happened
+					console.log("error loading include file @" + path);
+				}
+				else if(data) {
+					includes[path] = data + '';
+				}
+
+				if(loadedCount == includeList.length) {
+					//now, insert the contents of the includes into the filedescriptor
+					for(var i in includeList) {
+						var path = includeList[i].path;
+						var content = includes[path];
+						var line = includeList[i].line;
+						addContent(path, content, line);
+					}
+
+					//recursively call this until no more includes are found
+					replaceIncludes();
+				}
+			}
+		};
+
+		replaceIncludes();
+
+		this.descriptor = descriptor;
+		this.getText = getText;
 	}
 
 	var handleJoo = function (req, res, filePath, data, is404) {
+		/* create session variable and append it to the header
+		 * converts 'set-cookie' into an array if it is undefined or a string so that 'push' works later
+		 * this has the effect of adding on to set-cookie as opposed to overwriting it */
+		var appendSessionVariable = function (res, Session) {
+			var setCookieHeader = res.getHeader("Set-Cookie");
+			if(typeof setCookieHeader != "object") {
+				setCookieHeader = (setCookieHeader ? [setCookieHeader] : []);
+			}
+			setCookieHeader.push("session=" + JSON.stringify(Session));	//When we have more than one server running, this name might have to change
+			return setCookieHeader;
+		}
+
+		/* Inserts a JSON version of the server's 'Client' object at the open HTML tag in the file. */
+		var insertClient = function(html, Client) {
+			return html.replace("<html>", 
+				"<html>\n<script type='application/javascript'>\n"
+				+"var Client = "+JSON.stringify(Client)+";\n"+
+				"</script>");
+		}
+		
 		//if this page doesnt have a static variable created for it yet, create one now
 		if(typeof pageObjects[filePath] == "undefined") {
 			pageObjects[filePath] = {};

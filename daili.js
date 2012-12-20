@@ -10,8 +10,9 @@ process.on('message', function(message) {
     if(message.log){
         var fs = require('fs');
         var logStream = fs.openSync(message.log,'a');
+        var cl = console.log;
         console.log = function(data) {
-            process.stdout.write(data + '\n');
+            cl(data);
             var s = (new Date()).toUTCString() + ': ' + data + '\n';
             fs.write(logStream, s, 0, s.length, null);
         }
