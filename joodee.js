@@ -586,7 +586,7 @@ exports.Server = function (options) {
 	}
 
 	this.status = function() {
-		console.log('Server "'+options.name+'" is ' + (Server.listening ? '' : 'not ') + 'currently listening');
+		console.log('Server "'+options.name+'" is ' + (Server.listening ? '' : 'not ') + 'currently listening on '+options.port);
 		return Server.listening;
 	}
 

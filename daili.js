@@ -24,15 +24,18 @@ var joodee = require('./joodee');
 var server;
 
 process.on('message', function(message) {  
-    if(message.options){
+    if(message.options) {
         server = new joodee.Server(message.options);
     }
-    if(message.log){
+    if(message.log) {
         var fs = require('fs');
         var logStream = fs.openSync(message.log,'a');
         var cl = console.log;
         console.log = function(data) {
             cl(data);
+            if((typeof data) == 'object') {
+                data = require('util').inspect(data);
+            }
             var s = (new Date()).toUTCString() + ': ' + data + '\n';
             fs.write(logStream, s, 0, s.length, null);
         }
@@ -46,6 +49,16 @@ process.on('message', function(message) {
         break;
         case 'status':
             server.status();
-        break;           
+        break;
+        case 'process':
+            process.send({
+                name: server.name,
+                process: process,
+                cwd: process.cwd(),
+                uptime: process.uptime(),
+                hrtime: process.hrtime(),
+                memoryUsage: process.memoryUsage()
+            });
+        break;
     }
 });

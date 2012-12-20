@@ -30,6 +30,9 @@ var logStream = fs.openSync(logPath,'a');
 var cl = console.log;
 console.log = function(data) {
     cl(data);
+    if((typeof data) == 'object') {
+        data = require('util').inspect(data);
+    }
     var s = (new Date()).toUTCString() + ': ' + data + '\n';
     fs.write(logStream, s, 0, s.length, null);
 }
@@ -39,6 +42,9 @@ var spawn = function(config) {
 	child.send({
 		options: config,
 		log: './log.txt'
+	});
+	child.on('message', function(message) {
+		servers[message.name].process = message;
 	});
 	servers[config.name] = child;
 };
