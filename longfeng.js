@@ -6,10 +6,11 @@ var servers = [];
 
 var logPath = './log.txt';
 var logStream = fs.openSync(logPath,'a');
+var cl = console.log;
 console.log = function(data) {
-	process.stdout.write(data + '\n');
-	var s = (new Date()).toUTCString() + ': ' + data + '\n';
-	fs.write(logStream, s, 0, s.length, null);
+    cl(data);
+    var s = (new Date()).toUTCString() + ': ' + data + '\n';
+    fs.write(logStream, s, 0, s.length, null);
 }
 
 var spawn = function(config) {
