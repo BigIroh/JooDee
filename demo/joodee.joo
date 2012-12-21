@@ -41,7 +41,7 @@
 				<:
 					//sweet other line of code
 					console.log("joodee is fun.")
-					var debugging.is.cool = true;
+					//var debugging.is.cool = true;
 					var x = "meaningless";
 					var y = "lame";
 				:>

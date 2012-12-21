@@ -1,10 +1,18 @@
 [
     {
-		"name": "JooDee",
-		"dir": "./demo/",
-		"port": 8080,
-		"debug": true,
-		"defaultPage": "joodee.joo",
-		"timeout": 0
+        "name": "JooDee",
+        "dir": "./demo/",
+        "port": 8080,
+        "debug": true,
+        "defaultPage": "joodee.joo",
+        "timeout": 0
+    },
+	{
+    	"name": "Config",
+		"dir": "./config/",
+		"port": 8888,
+        "ip": "localhost",
+		"debug": false,
+		"defaultPage": "index.joo"
 	}
 ]

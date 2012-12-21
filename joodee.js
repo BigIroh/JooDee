@@ -170,13 +170,13 @@ exports.Server = function (options) {
 		data404 = fs.readFileSync(options.error404);
 	}
 	catch(e) {
-		data404 = fs.readFileSync(nodeDir+options.error404);
+		data404 = fs.readFileSync(pathLib.join(nodeDir,options.error404));
 	}
 	try {
 		data500 = fs.readFileSync(options.error500);
 	}
 	catch(e) {
-		data500 = fs.readFileSync(nodeDir+options.error500);
+		data500 = fs.readFileSync(pathLib.join(nodeDir,options.error500));
 	}
 
 
