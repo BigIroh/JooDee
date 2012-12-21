@@ -373,6 +373,10 @@ exports.Server = function (options) {
 			pageObjects[filePath] = {};
 		}
 
+		pageObjects[filePath].host = req.headers.host.split(':')[0];
+		pageObjects[filePath].port = req.headers.host.split(':')[1];
+		pageObjects[filePath].path = '/' + pathLib.relative(process.cwd(), filePath);
+
 		//get and post data
 		var GET;
 		var POST;

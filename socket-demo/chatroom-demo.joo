@@ -61,7 +61,7 @@
 	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
 	<script type="application/javascript">
 		$(document).ready(function() {
-	 		var connection = new WebSocket('ws://127.0.0.1:8084');
+	 		var connection = new WebSocket('ws://<::Page.host:>:8084<::Page.path:>');
 	 		console.log(connection);
 	 		connection.onopen = function () {
 				// connection is opened and ready to use
