@@ -1,0 +1,33 @@
+<!DOCTYPE>
+<html>
+    <:
+        //generate background and font colors
+        var red = Math.floor(Math.random()*100) + 100;
+        var green = Math.floor(Math.random()*100) + 125;
+        var blue = Math.floor(Math.random()*100) + 125;
+        console.log('404');
+    :>
+    <head>
+        <title>JooDee</title>
+        <link rel="stylesheet" type="text/css" href="/iroh.css">
+        <link rel="stylesheet" type="text/css" href="/joodee.css">
+    </head>
+    <body>
+        <div class="content">
+            <div class="item">
+                <div class="header">
+                    The administrator is very busy running the finest server in the world! But he will fix this as soon as time permits.
+                </div>
+                500 Internal Server Error
+            </div>
+        </div>
+    </body>
+    <style>
+        body {
+            background-color:rgb(<:: red+","+green+","+blue :>);
+        }
+        .code {
+            color:rgb(<:: (255-red)+","+(255-green)+","+(255-blue) :>);
+        }
+    </style>
+</html>

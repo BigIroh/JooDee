@@ -155,11 +155,29 @@ exports.Server = function (options) {
 	if(options.dir.charAt(options.dir.length-1) != '/') {
 		options.dir = options.dir + '/';
 	}
+	
+	try {
+		process.chdir(options.dir);
+	}
+	catch(e) {
+		console.log(options.name + ' cannot start because the directory does not exist. Please fix the config and reload.')
+		return false;
+	}
 
-	process.chdir(options.dir);
-
-	var data500 = fs.readFileSync(options.error500);
-	var data404 = fs.readFileSync(options.error404);
+	var data404;
+	var data500;
+	try {
+		data404 = fs.readFileSync(options.error404);
+	}
+	catch(e) {
+		data404 = fs.readFileSync(nodeDir+options.error404);
+	}
+	try {
+		data500 = fs.readFileSync(options.error500);
+	}
+	catch(e) {
+		data500 = fs.readFileSync(nodeDir+options.error500);
+	}
 
 
 	var parse = function(data) {

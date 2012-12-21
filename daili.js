@@ -26,6 +26,9 @@ var server;
 process.on('message', function(message) {  
     if(message.options) {
         server = new joodee.Server(message.options);
+        if(!server.listen) {
+            process.exit(4);
+        }
     }
     if(message.log) {
         var fs = require('fs');
@@ -52,7 +55,7 @@ process.on('message', function(message) {
         break;
         case 'process':
             process.send({
-                name: server.name,
+                name: server.options.name,
                 process: process,
                 cwd: process.cwd(),
                 uptime: process.uptime(),

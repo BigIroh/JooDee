@@ -39,14 +39,17 @@ console.log = function(data) {
 
 var spawn = function(config) {
 	var child = fork('./daili');
+	servers[config.name] = child;
+	child.on('message', function(message) {
+		servers[message.name].process = message;
+	});
+	child.on('exit', function(code, signal) {
+		actions['kill'](config.name);
+	});
 	child.send({
 		options: config,
 		log: './log.txt'
 	});
-	child.on('message', function(message) {
-		servers[message.name].process = message;
-	});
-	servers[config.name] = child;
 };
 
 var actions = new Array();
