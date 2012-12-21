@@ -1,0 +1,71 @@
+<:
+    if(!Page.initialized) {
+        try{
+            var WebSocketServer = require('websocket').server;
+            var http = require('http');
+
+            var httpServer = http.createServer();
+            httpServer.listen(8889, 'localhost');
+
+            Page.wsServer = new WebSocketServer({httpServer: httpServer});
+
+            Page.wsServer.on('request', function(request) {
+
+                var connection = request.accept(null, request.origin); 
+                var index = Page.clients.push(connection) - 1;
+                console.log(Page.clients.length + " clients connected.");
+                connection.on('message', function(message) {
+                    for(i in Page.clients)
+                        Page.clients[i].send(
+                            JSON.stringify({
+                                connection: i,
+                                message: message.utf8Data
+                            })
+                        );
+                    delete Page.wsServer;
+                });
+
+                // user disconnected
+                connection.on('close', function(connection) {
+                    Page.clients.splice(index, 1);
+                    console.log(index+ ' closed');
+                });
+            });
+            Page.initialized = true;
+        }
+        catch(err) {
+            console.log(err);
+        }
+    }
+:>
+<!DOCTYPE html>
+<html>
+    <title>
+        Config
+    </title>
+    <head>
+        <link rel="stylesheet" type="text/css" href="iroh.css">
+        <link rel="stylesheet" type="text/css" href="joodee.css">
+        <script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
+    </head>
+    <body>
+        
+    </body>
+    <script type="application/javascript">
+        $(document).ready(function() {
+            var connection = new WebSocket('ws://localhost:8889');
+            console.log(connection);
+            connection.onopen = function () {
+
+            };
+
+            connection.onerror = function (error) {
+                // an error occurred when sending/receiving data
+            };
+
+            connection.onmessage = function (message) {
+                var obj = JSON.parse(message.data);
+            };
+        });
+    </script>
+</html>

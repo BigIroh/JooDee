@@ -58,7 +58,6 @@
 			</div>
 		</div>
 	</body>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
 	<script type="application/javascript">
 		$(document).ready(function() {
 	 		var connection = new WebSocket('ws://<::Page.host:>:8084<::Page.path:>');
