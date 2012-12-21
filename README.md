@@ -56,7 +56,16 @@ but you can easily expose them to the client:
     
 ```
 Note: changes to any of these special variables client-side will not be reflected server-side,
-with the exception of `Session` (and even those changes would require the page to be reloaded).
+with the exception of `Session` (and even those changes would require the page to be reloaded).<br>
+`Server` and `Page` are variables which are shared either across the entire server, or scoped to
+all instances of a particular page.  For example, to keep track of the number of views on a particular
+page since the server started up, you could write:
+```
+<:
+    if(!Page.userCount) Page.views++
+:>
+```
+`Server` acts in a similar matter, except that it is a single variable accessable to all pages.
 ##LongFeng##
 LongFeng is a program for creating and controlling JooDee instances. It initially 
 creates them based on the `config.json` file.
